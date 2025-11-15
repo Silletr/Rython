@@ -7,7 +7,6 @@ fn hello_rust(name: &str) -> PyResult<String> {
 
 #[pymodule]
 fn rython_jit(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
+    m.add_function(pyo3::wrap_pyfunction_bound!(hello_rust, m))?;
     Ok(())
 }
-

@@ -1,4 +1,5 @@
 import rython_jit
+import sys
+sys.path.append("../")
 
-print(rython_jit.hello_rust("Silletr"))
-
+rython_jit.hello_rust("Me")

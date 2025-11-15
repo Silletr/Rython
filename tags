@@ -1,0 +1,29 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/silletr/Projects/Rython/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	//
+BasicLexer	rython/parser/lexer.py	/^class BasicLexer(Lexer):$/;"	c
+COMMENT	rython/parser/lexer.py	/^    def COMMENT(self, t):$/;"	m	class:BasicLexer
+NAME	rython/parser/lexer.py	/^    NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'$/;"	v	class:BasicLexer
+NUMBER	rython/parser/lexer.py	/^    def NUMBER(self, t):$/;"	m	class:BasicLexer
+Rython	README.md	/^# Rython$/;"	c
+STRING	rython/parser/lexer.py	/^    STRING = r'\\".*?\\"'$/;"	v	class:BasicLexer
+a	examples/example.py	/^a = 8$/;"	v
+c	examples/example.py	/^c = x + a * 3$/;"	v
+compile_native	rython/jit/__rust__/bridge.py	/^def compile_native(code: str) -> str:$/;"	f	typeref:typename:str
+hello_rust	rython/jit/__rust__/src/lib.rs	/^fn hello_rust(name: &str) -> PyResult<String> {$/;"	f
+ignore	rython/parser/lexer.py	/^    ignore = '\\t '$/;"	v	class:BasicLexer
+lib_path	rython/jit/__rust__/bridge.py	/^    lib_path = os.path.join(os.path.dirname(__file__), "__rust__", "target", "release")$/;"	v
+literals	rython/parser/lexer.py	/^    literals = { '=', '+', '-', '\/', $/;"	v	class:BasicLexer
+newline	rython/parser/lexer.py	/^    def newline(self, t):$/;"	m	class:BasicLexer
+rython_jit	rython/jit/__rust__/bridge.py	/^    rython_jit = importlib.import_module("rython_jit")$/;"	v
+rython_jit	rython/jit/__rust__/src/lib.rs	/^fn rython_jit(m: &Bound<'_, PyModule>) -> PyResult<()> {$/;"	f
+tokens	rython/parser/lexer.py	/^    tokens = { NAME, NUMBER, STRING }$/;"	v	class:BasicLexer
+x	examples/example.py	/^x = 5$/;"	v
