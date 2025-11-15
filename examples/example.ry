@@ -1,5 +1,16 @@
-# Example of code in Rython
-x = 5
-a = 8
-c = x + a * 3
-print(c)
+# Example of code in Rython - almost the same syntax as on python, but with some different
+x: int = 5
+a: int = 8
+c: int = x + a * 3
+print_int(c) # Will be - print_int, print_str, print_float 
+---
+for example if u need to print int + str - 
+print_con("Source text %1, %2",
+  your first var,
+  your second var)
+print_con = as `print and concatenate`
+# - one-string comment 
+# --- - as """ """ in python
+
+---
+# strong typing of variables data, but without `u64` or something like this - for more understandable and friendly syntax
