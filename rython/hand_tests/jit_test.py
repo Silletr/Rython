@@ -1,5 +1,3 @@
 import rython_jit
-import sys
-sys.path.append("../")
-
-rython_jit.hello_rust("Me")
+print(rython_jit.add(2, 3))     # 5
+print(rython_jit.fib(20))       # 6765
