@@ -1,16 +1,24 @@
-# parser/lexer.py
 from ply import lex
 
 
 class BasicLexer:
-    tokens = ('NAME', 'NUMBER', 'STRING')  # All names we using
+    tokens = ('NAME', 'NUMBER', 'STRING', 'COLON', 'EQUALS')
 
-    # Literals
     literals = {'=', '+', '-', '/', '*', '(', ')', ',', ';'}
+
     ignore = ' \t'
 
-    # === Regular expression as t-functions ===
+    # === Commentaries ===
+    @lex.TOKEN(r'\#.*')
+    def t_COMMENT(self, t):
+        pass
 
+    @lex.TOKEN(r'---[\s\S]*?---')
+    def t_MULTILINE_COMMENT(self, t):
+        self.lexer.lineno += t.value.count('\n')
+        pass
+
+    # === ТОКЕНИ ===
     @lex.TOKEN(r'[a-zA-Z_][a-zA-Z0-9_]*')
     def t_NAME(self, t):
         return t
@@ -25,19 +33,23 @@ class BasicLexer:
         t.value = int(t.value)
         return t
 
-    @lex.TOKEN(r'//.*')
-    def t_COMMENT(self, t):
-        pass
+    @lex.TOKEN(r':')
+    def t_COLON(self, t):
+        return t
 
+    @lex.TOKEN(r'=')
+    def t_EQUALS(self, t):
+        return t
+
+    # === New lines ===
     @lex.TOKEN(r'\n+')
     def t_newline(self, t):
         self.lexer.lineno += t.value.count('\n')
 
-    # === ERROR ===
+    # === Errors ===
     def t_error(self, t):
         print(f"Illegal char '{t.value[0]}' at line {self.lexer.lineno}")
         t.lexer.skip(1)
 
-    # === INIT ===
     def __init__(self):
         self.lexer = lex.lex(object=self)
