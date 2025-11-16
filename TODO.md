@@ -3,8 +3,8 @@ Done emoji - ✔️
 
 | Task | Done? |
  | -------------- | --------------- |
- | Write the AST logic |  |
- | Write the Lexer logic |  |
+ | Write the AST logic | ✔️ |
+ | Write the Lexer logic | ✔️ |
  | Think up commands names |  |
  | Write base syntax |  |
   
