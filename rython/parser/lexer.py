@@ -18,7 +18,7 @@ class BasicLexer:
         self.lexer.lineno += t.value.count('\n')
         pass
 
-    # === ТОКЕНИ ===
+    # === Tokens ===
     @lex.TOKEN(r'[a-zA-Z_][a-zA-Z0-9_]*')
     def t_NAME(self, t):
         return t
