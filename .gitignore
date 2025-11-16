@@ -1,6 +1,12 @@
 rython/jit/__rust__/target/
 rython/hand_test/__pycache__/
 rython/tests/__pycache__/
+# Parser output
+rython/parser/parser.out
+rython/parser/parsetab.py
+rython/parser/*.out
+rython/parser/parsetab.*
+
 *.pyc
 *.so
 *.pyd

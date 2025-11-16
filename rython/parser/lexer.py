@@ -1,30 +1,43 @@
-class BasicLexer(Lexer):
-    tokens = { NAME, NUMBER, STRING }
-    ignore = '\t '
-    literals = { '=', '+', '-', '/', 
-                '*', '(', ')', ',', ';'}
+# parser/lexer.py
+from ply import lex
 
 
-    # Define tokens as regular expressions
-    # (stored as raw strings)
-    NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
-    STRING = r'\".*?\"'
+class BasicLexer:
+    tokens = ('NAME', 'NUMBER', 'STRING')  # All names we using
 
-    # Number token
-    @_(r'\d+')
-    def NUMBER(self, t):
-      
-        # convert it into a python integer
-        t.value = int(t.value) 
+    # Literals
+    literals = {'=', '+', '-', '/', '*', '(', ')', ',', ';'}
+    ignore = ' \t'
+
+    # === Regular expression as t-functions ===
+
+    @lex.TOKEN(r'[a-zA-Z_][a-zA-Z0-9_]*')
+    def t_NAME(self, t):
         return t
 
-    # Comment token
-    @_(r'//.*')
-    def COMMENT(self, t):
+    @lex.TOKEN(r'"[^"]*"')
+    def t_STRING(self, t):
+        t.value = t.value[1:-1]
+        return t
+
+    @lex.TOKEN(r'\d+')
+    def t_NUMBER(self, t):
+        t.value = int(t.value)
+        return t
+
+    @lex.TOKEN(r'//.*')
+    def t_COMMENT(self, t):
         pass
 
-    # Newline token(used only for showing
-    # errors in new line)
-    @_(r'\n+')
-    def newline(self, t):
-        self.lineno = t.value.count('\n')
+    @lex.TOKEN(r'\n+')
+    def t_newline(self, t):
+        self.lexer.lineno += t.value.count('\n')
+
+    # === ERROR ===
+    def t_error(self, t):
+        print(f"Illegal char '{t.value[0]}' at line {self.lexer.lineno}")
+        t.lexer.skip(1)
+
+    # === INIT ===
+    def __init__(self):
+        self.lexer = lex.lex(object=self)
