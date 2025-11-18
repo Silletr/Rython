@@ -24,6 +24,7 @@ git clone git@github.com:Silletr/Rython.git
 # Go into the folder and run a test lexer
 cd Rython/
 python3 rython/hand_tests/test_lexer.py
+```
 
 > Note: I'm writing this README from my phone, so file paths may slightly differ.
 Check the hand_tests/ folder for working examples.
@@ -41,7 +42,7 @@ example.ry — example Rython file (interpreter is in progress, see rython/jit/_
 
 
 Example Rython code:
-```python
+```rython
 x: int = 5
 y: int = 8
 z: int = x + y * 3
