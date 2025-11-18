@@ -1,30 +1,100 @@
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
-[![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
----
-## Introduction
-I think already all heared about Rust, Python, yep? Then I can try to suggest you this repo - it's will be **programming language**, but based on Rust (compiler, JIT in future, all math operation), and Python (syntax from python but a little bit different)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)  
+[![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
 
 ---
-## HowTo install and use
-First at first - I must ping it - for now this lang doesn't have a compiler, so you need clone repository by SSH (If you have his) by: 
-`git clone git@github.com:Silletr/Rython`, and then 
-`cd Rython/ && python3 rython/hand_tests/test_lexer.py` (as I remember it's right file (**I writing this README in phone, so can't get access to files**))
+
+## Introduction
+
+I think almost everyone has already heard about Rust and Python, right?  
+So here's my idea: this repository is for a **programming language** based on **Rust** (compiler, JIT in future, all math operations) and **Python** (Python-like syntax, but a little different).  
+
+Rython aims to combine Python's readability with Rust's speed. 🦀🐍
+
 ---
-## Example code 
-Well, examples is already in examples/ folder (with .gitignore and etc) - example.py needs for test output we need, example.ry - file for testing output when I will code interpreter (now it's not exist, you can see interpreter progress in `rython/jit/__rust__/src/` as I remember (but not exactly sure, srry), but example code also here:
-```python
+
+## How to Install and Use
+
+Currently, the language **does not have a compiler yet**.  
+To try it out:
+
+```bash
+# Clone repository via SSH
+git clone git@github.com:Silletr/Rython.git
+
+# Go into the folder and run a test lexer
+cd Rython/
+python3 rython/hand_tests/test_lexer.py
+
+> Note: I'm writing this README from my phone, so file paths may slightly differ.
+Check the hand_tests/ folder for working examples.
+
+
+---
+
+Example Code
+
+Examples are in the examples/ folder:
+
+example.py — test outputs
+
+example.ry — example Rython file (interpreter is in progress, see rython/jit/__rust__/src/)
+
+
+Example Rython code:
+```rython
 x: int = 5
 y: int = 8
 z: int = x + y * 3
+
 print_int(z)
 print_con("Sum: %1, Values: %2", z, y)
 ```
+
 ---
-## What about commands
-Well, here all interesting - as I said I will create a language with Python-like syntax, but with some differents, and you already see it in example -
-strictly-dynamic types - Rust will define your type basing only in `x: int` <- **on this part with "int"**
-print_con -> print_concanetante
-print_int -> print_integer
-print_str -> print_string
-prinr_flo -> print_float
-That's will be do for evade confusing integer in ouput, when you need for example string, but you have float - just for convenience 🤗
+
+Commands / Functions
+
+Some notable commands in Rython:
+
+Strictly-dynamic types — Rust automatically determines the size of your variable based on the type hint, e.g. x: int
+
+print_int() — prints integers
+
+print_str() — prints strings
+
+print_float() — prints floats
+
+print_con() — prints concatenated output, e.g., string + int + float, for convenience
+
+
+This is to avoid confusing outputs when mixing types and to make code more readable. 🤗
+
+
+---
+
+Roadmap / Future Plans
+
+JIT compilation (in progress) ->
+
+Full compiler to generate .bin_ry binaries ->
+
+Expand standard library -> 
+
+Add more examples, tests, and optimizations
+
+
+
+---
+
+How to Contribute
+
+- Anyone is welcome!
+
+- Python devs — tests, examples, bug reports
+
+- Rust devs — runtime optimization, JIT
+
+- Documentation / Design — README improvements, examples, tutorials
+
+
+- Feel free to DM me or open issues/pull requests. Let's make Rython faster than Python and friendlier than Rust together! 🦀🐍
