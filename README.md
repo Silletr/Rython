@@ -41,7 +41,7 @@ example.ry — example Rython file (interpreter is in progress, see rython/jit/_
 
 
 Example Rython code:
-```rython
+```python
 x: int = 5
 y: int = 8
 z: int = x + y * 3
