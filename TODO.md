@@ -7,4 +7,5 @@ Done emoji - ✔️
  | Write the Lexer logic | ✔️ |
  | Think up commands names |  |
  | Write base syntax |  |
+ | Write JIT (based on Cranelift) | |
   
