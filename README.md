@@ -23,7 +23,7 @@ git clone git@github.com:Silletr/Rython.git
 
 # Go into the folder and run a test lexer
 cd Rython/
-python3 rython/hand_tests/test_lexer.py
+python3 rython/hand_tests/test_jit.py
 ```
 
 > Note: I'm writing this README from my phone, so file paths may slightly differ.
