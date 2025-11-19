@@ -6,7 +6,7 @@ class BasicLexer:
 
     literals = {'=', '+', '-', '/', '*', '(', ')', ',', ';'}
 
-    ignore = ' \t'
+    t_ignore = ' \t'
 
     # === Commentaries ===
     @lex.TOKEN(r'\#.*')

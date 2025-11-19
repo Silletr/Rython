@@ -5,3 +5,4 @@ c: int = x + a * 3
 print_int(c)
 
 print_con("Result: %1 + %2 = %3", x, a, c)
+print_str("Hello from Rython!")
