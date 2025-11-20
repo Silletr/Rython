@@ -2,24 +2,24 @@ from ply import lex
 
 
 class BasicLexer:
-    tokens = ('NAME', 'NUMBER', 'STRING', 'COLON', 'EQUALS')
+    tokens = ("NAME", "NUMBER", "STRING", "COLON", "EQUALS")
 
-    literals = {'=', '+', '-', '/', '*', '(', ')', ',', ';'}
+    literals = {"=", "+", "-", "/", "*", "(", ")", ",", ";"}
 
-    t_ignore = ' \t'
+    t_ignore = " \t"
 
     # === Commentaries ===
-    @lex.TOKEN(r'\#.*')
+    @lex.TOKEN(r"\#.*")
     def t_COMMENT(self, t):
         pass
 
-    @lex.TOKEN(r'---[\s\S]*?---')
+    @lex.TOKEN(r"---[\s\S]*?---")
     def t_MULTILINE_COMMENT(self, t):
-        self.lexer.lineno += t.value.count('\n')
+        self.lexer.lineno += t.value.count("\n")
         pass
 
     # === Tokens ===
-    @lex.TOKEN(r'[a-zA-Z_][a-zA-Z0-9_]*')
+    @lex.TOKEN(r"[a-zA-Z_][a-zA-Z0-9_]*")
     def t_NAME(self, t):
         return t
 
@@ -28,23 +28,23 @@ class BasicLexer:
         t.value = t.value[1:-1]
         return t
 
-    @lex.TOKEN(r'\d+')
+    @lex.TOKEN(r"\d+")
     def t_NUMBER(self, t):
         t.value = int(t.value)
         return t
 
-    @lex.TOKEN(r':')
+    @lex.TOKEN(r":")
     def t_COLON(self, t):
         return t
 
-    @lex.TOKEN(r'=')
+    @lex.TOKEN(r"=")
     def t_EQUALS(self, t):
         return t
 
     # === New lines ===
-    @lex.TOKEN(r'\n+')
+    @lex.TOKEN(r"\n+")
     def t_newline(self, t):
-        self.lexer.lineno += t.value.count('\n')
+        self.lexer.lineno += t.value.count("\n")
 
     # === Errors ===
     def t_error(self, t):
