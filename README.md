@@ -53,41 +53,40 @@ print_con("Sum: %1, Values: %2", z, y)
 
 ---
 
-Commands / Functions
+## Commands / Functions
 
 Some notable commands in Rython:
 
-Strictly-dynamic types — Rust automatically determines the size of your variable based on the type hint, e.g. x: int
+**Strictly-dynamic types — Rust automatically determines the size of your variable based on the type hint, e.g. x: int**
 
-print_int() — prints integers
+  - print_int() — prints integers
 
-print_str() — prints strings
+  - print_str() — prints strings
 
-print_float() — prints floats
+  - print_float() — prints floats
 
-print_con() — prints concatenated output, e.g., string + int + float, for convenience
-
+  - print_con() — prints concatenated output, e.g., string + int + float, for convenience
 
 This is to avoid confusing outputs when mixing types and to make code more readable. 🤗
 
 
 ---
 
-Roadmap / Future Plans
+## Roadmap / Future Plans
 
-JIT compilation (in progress) ->
+- [ ] JIT compilation (in progress) ->
 
-Full compiler to generate .bin_ry binaries ->
+- [ ] Full compiler to generate .bin_ry binaries ->
 
-Expand standard library -> 
+- [ ] Expand standard library -> 
 
-Add more examples, tests, and optimizations
+- [ ] Add more examples, tests, and optimizations
 
 
 
 ---
 
-How to Contribute
+## How to Contribute
 
 - Anyone is welcome!
 
