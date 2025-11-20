@@ -9,6 +9,6 @@ except ImportError:
     sys.path.append(lib_path)
     rython_jit = importlib.import_module("rython_jit")
 
+
 def compile_native(code: str) -> str:
     return rython_jit.compile_to_native(code)
-
