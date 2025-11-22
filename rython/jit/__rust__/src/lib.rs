@@ -25,8 +25,6 @@ fn fib(n: u32) -> u64 {
     b
 }
 
-
-
 #[pymodule]
 fn rython_jit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
