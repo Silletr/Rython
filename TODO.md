@@ -8,4 +8,3 @@ Done emoji - ✔️
  | Think up commands names |  |
  | Write base syntax |  |
  | Write JIT (based on Cranelift) | |
-  
