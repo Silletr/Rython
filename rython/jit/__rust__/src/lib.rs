@@ -4,14 +4,13 @@ use pyo3::prelude::*;
 mod math;
 
 use math::add_func::add;
-use math::multiply_func::multiply;
 use math::fib_func::fib;
+use math::multiply_func::multiply;
 
 #[pyfunction]
 fn hello_rust(name: &str) -> PyResult<String> {
     Ok(format!("Hello from Rust, {}!", name))
 }
-
 
 /// Rython JIT module
 #[pymodule]
