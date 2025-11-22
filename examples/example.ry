@@ -2,7 +2,9 @@
 x: int = 5
 a: int = 8
 c: int = x + a * 3
-print_int(c)
+s: int = x - a * 150
+print_con("Result of x + a * 3 = %1", c)
+print_con("Result of x - a * 150 = %1", s)
 
 print_con("Result: %1 + %2 = %3", x, a, c)
 print_str("Hello from Rython!")

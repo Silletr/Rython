@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from parser import BasicParser
+import rython_jit
 
 
 def run_ast(ast):
@@ -24,11 +25,11 @@ def run_ast(ast):
             left = run_ast(ast.left)
             right = run_ast(ast.right)
             if ast.op == "+":
-                return left + right
+                return rython_jit.add(left, right)
             elif ast.op == "-":
                 return left - right
             elif ast.op == "*":
-                return left * right
+                return rython_jit.multiply(left, right)
             elif ast.op == "/":
                 return left / right
 
