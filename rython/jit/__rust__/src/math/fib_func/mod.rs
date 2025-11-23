@@ -1,11 +1,19 @@
 use pyo3::prelude::*;
 
 #[pyfunction]
-pub fn fib(n: i64) -> PyResult<i64> {
+pub fn fib(n: i64) -> i64 {
     if n <= 1 {
-        return Ok(n);
+        return n;
     }
-    let a = fib(n - 1)?;
-    let b = fib(n - 2)?;
-    Ok(a + b)
+
+    let mut a = 0;
+    let mut b = 1;
+
+    for _ in 2..=n {
+        let tmp = a + b;
+        a = b;
+        b = tmp;
+    }
+
+    b
 }
