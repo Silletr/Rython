@@ -1,4 +1,5 @@
 # Example of code in Rython
+
 x: int = 5
 a: int = 8
 c: int = x + a * 3
