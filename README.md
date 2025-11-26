@@ -23,34 +23,40 @@ git clone git@github.com:Silletr/Rython.git
 
 # Go into the folder and run a test lexer
 cd Rython/
-python3 rython/hand_tests/test_jit.py
+python3 rython/hand_tests/jit_test.py
 ```
 
-> Note: I'm writing this README from my phone, so file paths may slightly differ.
-Check the hand_tests/ folder for working examples.
-
+Or you can add the alias in your terminal:
+```bash
+alias rython="YOUR_RYTHON_PATH/rython/test.py"
+```
+Example of command:
+`rython filename.ry`
 
 ---
-
-Example Code
-
+## Example Code
 Examples are in the examples/ folder:
+  - *example.py — test outputs*
+  - *example.ry — example Rython file (interpreter is in progress, see `rython/jit/__rust__/src/`)*
 
-example.py — test outputs
-
-example.ry — example Rython file (interpreter is in progress, see rython/jit/__rust__/src/)
-
-
-Example Rython code:
+**Example Rython code**:
 ```rython
+# Variables
 x: int = 5
 y: int = 8
 z: int = x + y * 3
+a: str = "Hi!"
 
+# Print functions
 print_int(z)
 print_con("Sum: %1, Values: %2", z, y)
+print_str("Hello from Rython!")
+# Functions
+fibonacci(15) # Will print: 610
+add(x, y) # Output: 13
+multiply(x, y) # Output: 40
+minus(x, y) # Output: -3
 ```
-
 ---
 
 ## Commands / Functions
@@ -82,19 +88,12 @@ This is to avoid confusing outputs when mixing types and to make code more reada
 
 - [ ] Add more examples, tests, and optimizations
 
-
-
 ---
 
 ## How to Contribute
-
 - Anyone is welcome!
-
 - Python devs — tests, examples, bug reports
-
 - Rust devs — runtime optimization, JIT
-
 - Documentation / Design — README improvements, examples, tutorials
-
 
 - Feel free to DM me or open issues/pull requests. Let's make Rython faster than Python and friendlier than Rust together! 🦀🐍
