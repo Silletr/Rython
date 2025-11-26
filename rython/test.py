@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-from parser import BasicParser
+from parser.code_parser import BasicParser
 import rython_jit
 
 

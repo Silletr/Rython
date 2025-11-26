@@ -1,10 +1,13 @@
 import subprocess
+from shutil import which
+
+GIT_DIR = str(which("git"))
 
 
 def last_tag():
     subprocess.run(["git", "fetch", "--tags"], check=True)
     result = subprocess.run(
-        ["git", "describe", "--tags", "--abbrev=0"],
+        [GIT_DIR, "describe", "--tags", "--abbrev=0"],
         text=True,
         capture_output=True,
         check=True,
@@ -19,7 +22,7 @@ def generate_changelog():
     except subprocess.CalledProcessError:
         from_tag = None
 
-    cmd = ["git", "log", "--pretty=format:%h %s"]
+    cmd = [GIT_DIR, "log", "--pretty=format:%h %s"]
     if from_tag:
         cmd.append(f"{from_tag}..{to_tag}")
 

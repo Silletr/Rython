@@ -1,4 +1,4 @@
-from parser import BasicParser
+from ..parser.code_parser import BasicParser
 
 parser = BasicParser()
 
