@@ -1,5 +1,5 @@
 import pytest
-from rython_jit import add, fib, minus, multiply
+from rython_jit import add, fibonacci, minus, multiply
 from time import perf_counter
 
 
@@ -35,7 +35,11 @@ def test_multiply(subtests):
             assert result == expected
 
 
-@pytest.mark.parametrize("n,expected", [(23, 28657), (50, 12586269025), (5, 5)])
+fib_num = 150
+fib_res = 6792540214324356296
+
+
+@pytest.mark.parametrize("n,expected", [(23, 28657), (fib_num, fib_res), (5, 5)])
 def test_fib(n, expected):
-    result = timed(fib, n)
+    result = timed(fibonacci, n)
     assert result == expected

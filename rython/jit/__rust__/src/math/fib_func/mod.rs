@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 #[pyfunction]
-pub fn fib(n: i64) -> i64 {
+pub fn fibonacci(n: i64) -> i64 {
     if n <= 1 {
         return n;
     }

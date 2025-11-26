@@ -54,6 +54,12 @@ def run_call(ast):
         output = run_ast(ast.args[0])
         print(output)
         return output
+
+    elif ast.func in rython_jit.__all__:
+        func = getattr(rython_jit, ast.func)
+        args = [run_ast(arg) for arg in ast.args]
+        return func(*args)
+
     else:
         raise ValueError(f"Unknown function {ast.func}")
 
