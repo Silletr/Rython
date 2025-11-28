@@ -97,3 +97,6 @@ This is to avoid confusing outputs when mixing types and to make code more reada
 - Documentation / Design — README improvements, examples, tutorials
 
 - Feel free to DM me or open issues/pull requests. Let's make Rython faster than Python and friendlier than Rust together! 🦀🐍
+
+---
+![Alt](https://repobeats.axiom.co/api/embed/4fceb7306320287505bc20e9c15a95c2b68cba99.svg "Repobeats analytics image")
