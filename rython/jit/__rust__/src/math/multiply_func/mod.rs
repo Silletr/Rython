@@ -1,5 +1,7 @@
 use pyo3::prelude::*;
 
+/// Multiply numbers, like a * b
+/// dont try to a: int * b: str = its just crash (tested by Silletr)
 #[pyfunction]
 #[pyo3(name = "multiply", signature = (a, b))]
 /// Multiply two integers. Returns i64.

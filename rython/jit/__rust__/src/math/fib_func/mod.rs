@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+/// Just.. a fibonacci function, maybe
 #[pyfunction]
 #[pyo3(name = "fibonacci", signature = (n))]
 /// Calculate fibonacci number iteratively (super fast).

@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+/// Adding a number, like: a + b
 #[pyfunction]
 #[pyo3(name = "add", signature = (a, b))]
 /// Add two numbers (int or float).

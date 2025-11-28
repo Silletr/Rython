@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+/// Minus-function.. idk what to write here, really :D
 #[pyfunction]
 #[pyo3(name = "minus", signature = (a, b))]
 /// Subtract two numbers.
