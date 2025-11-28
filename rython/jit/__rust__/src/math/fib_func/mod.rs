@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+/// Just.. a fibonacci function, maybe
 #[pyfunction]
 pub fn fibonacci(n: i64) -> i64 {
     if n <= 1 {
