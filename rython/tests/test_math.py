@@ -16,7 +16,8 @@ def test_add(subtests):
     for a, b, expected in test_cases:
         with subtests.test(a=a, b=b):
             result = timed(add, a, b)
-            assert result == expected
+            if result != expected:
+                raise AssertionError
 
 
 def test_minus(subtests):
@@ -24,7 +25,8 @@ def test_minus(subtests):
     for a, b, expected in test_cases:
         with subtests.test(a=a, b=b):
             result = timed(minus, a, b)
-            assert result == expected
+            if result != expected:
+                raise AssertionError
 
 
 def test_multiply(subtests):
@@ -32,7 +34,8 @@ def test_multiply(subtests):
     for a, b, expected in test_cases:
         with subtests.test(a=a, b=b):
             result = timed(multiply, a, b)
-            assert result == expected
+            if result != expected:
+                raise AssertionError
 
 
 fib_num = 150
@@ -42,4 +45,5 @@ fib_res = 6792540214324356296
 @pytest.mark.parametrize("n,expected", [(23, 28657), (fib_num, fib_res), (5, 5)])
 def test_fib(n, expected):
     result = timed(fibonacci, n)
-    assert result == expected
+    if result != expected:
+        raise AssertionError
