@@ -1,4 +1,4 @@
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)  
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)  
 [![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
 
 ---
