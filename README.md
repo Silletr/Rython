@@ -26,11 +26,14 @@ cd Rython/
 python3 rython/hand_tests/jit_test.py
 ```
 
-Or you can add the alias in your terminal:
+> [!TIP]
+> Or you can add the alias in your terminal:<br/>
 ```bash
 alias rython="YOUR_RYTHON_PATH/rython/test.py"
 ```
-Example of command:
+
+> [!NOTE]
+> Example of command:<br/>
 `rython filename.ry`
 
 ---
