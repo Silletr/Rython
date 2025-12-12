@@ -1,0 +1,2 @@
+print_integer(50)
+print_str("Now will print_integer('hello') ")

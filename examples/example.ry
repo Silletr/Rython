@@ -9,5 +9,9 @@ print_int(45)
 print_con("Result of x + a * 3 = %1", c)
 print_con("Result of x - a * 150 = %1", s)
 print_con("Result: %1 + %2 = %3", x, a, c)
+
 print_str("Hello from Rython!")
+print_float(5.4)
+print_integer(90)
+
 fibonacci(90)

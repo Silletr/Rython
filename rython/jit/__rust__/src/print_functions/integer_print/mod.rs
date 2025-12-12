@@ -1,0 +1,17 @@
+use pyo3::prelude::*;
+
+pub fn print_type_of<T>(_: &T) -> String {
+    format!("Type: {}", std::any::type_name::<T>())
+}
+
+#[pyfunction]
+#[pyo3(name = "print_integer", signature = (value))]
+/// Print integer value.
+///
+/// Example:
+///     >>> print_integer(42)
+///     42
+pub fn print_integer(value: i64) {
+    println!("{}", value);
+    println!("Type: {}", print_type_of(&value));
+}
