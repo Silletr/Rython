@@ -2,8 +2,7 @@ from ply import lex
 
 
 class BasicLexer:
-    tokens = ("NAME", "NUMBER", "STRING", "COLON", "EQUALS")
-
+    tokens = ("NAME", "NUMBER", "FLOAT", "STRING", "COLON", "EQUALS")
     literals = {"=", "+", "-", "/", "*", "(", ")", ",", ";"}
 
     t_ignore = " \t"
@@ -28,9 +27,15 @@ class BasicLexer:
         t.value = t.value[1:-1]
         return t
 
-    @lex.TOKEN(r"\d+")
+    @lex.TOKEN(r"\d+\.\d*|\.\d+|\d+\.")
     def t_NUMBER(self, t):
+        t.value = float(t.value)
+        return t
+
+    @lex.TOKEN(r"\d+")
+    def t_INT(self, t):
         t.value = int(t.value)
+        t.type = "NUMBER"
         return t
 
     @lex.TOKEN(r":")

@@ -12,6 +12,11 @@ class Number:
 
 
 @dataclass
+class Float:
+    value: float
+
+
+@dataclass
 class String:
     value: str
 

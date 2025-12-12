@@ -15,6 +15,10 @@ def run_number(ast):
     return ast.value
 
 
+def run_float(ast):
+    return ast.value
+
+
 def run_string(ast):
     return ast.value
 
@@ -67,6 +71,7 @@ def run_call(ast):
 DISPATCH_TABLE = {
     "VarDecl": run_var_decl,
     "Number": run_number,
+    "Float": run_float,
     "BinOp": run_binop,
     "String": run_string,
     "Var": run_var,
