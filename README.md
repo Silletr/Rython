@@ -59,12 +59,13 @@ fibonacci(15) # Will print: 610
 add(x, y) # Output: 13
 multiply(x, y) # Output: 40
 minus(x, y) # Output: -3
+divide(x,5) # Output: 1
 ```
 ---
 
 ## Commands / Functions
 
-Some notable commands in Rython:
+**Some notable commands in Rython**:
 
 **Strictly-dynamic types — Rust automatically determines the size of your variable based on the type hint, e.g. x: int**
 
@@ -78,17 +79,13 @@ Some notable commands in Rython:
 
 This is to avoid confusing outputs when mixing types and to make code more readable. 🤗
 
-
 ---
 
 ## Roadmap / Future Plans
 
 - [ ] JIT compilation (in progress) ->
-
 - [ ] Full compiler to generate .bin_ry binaries ->
-
 - [ ] Expand standard library -> 
-
 - [ ] Add more examples, tests, and optimizations
 
 ---
@@ -97,7 +94,7 @@ This is to avoid confusing outputs when mixing types and to make code more reada
 - Anyone is welcome!
 - Python devs — tests, examples, bug reports
 - Rust devs — runtime optimization, JIT
-- Documentation / Design — README improvements, examples, tutorials
+- Front-end / Designers — README improvements, examples, tutorials, maybe even creating a website 
 
 - Feel free to DM me or open issues/pull requests. Let's make Rython faster than Python and friendlier than Rust together! 🦀🐍
 
