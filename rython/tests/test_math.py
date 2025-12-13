@@ -1,5 +1,5 @@
 import pytest
-from rython_jit import add, fibonacci, minus, multiply
+from rython_jit import add, fibonacci, minus, multiply, divide
 from time import perf_counter
 
 
@@ -47,3 +47,12 @@ def test_fib(n, expected):
     result = timed(fibonacci, n)
     if result != expected:
         raise AssertionError
+
+
+def test_divide(subtests):
+    test_cases = [(10, 5, 2), (9, 5, 1.8), (-5, 4, -1.25)]
+    for a, b, excepted in test_cases:
+        with subtests.test(a=a, b=b):
+            result = timed(divide, a, b)
+            if result != excepted:
+                raise AssertionError

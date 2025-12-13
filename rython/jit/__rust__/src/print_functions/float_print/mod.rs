@@ -14,5 +14,5 @@ pub fn print_type_of<T>(_: &T) -> String {
 
 pub fn print_float(value: f64) {
     println!("{}", value);
-    println!("Type: {}", print_type_of(&value));
+    println!("{}", print_type_of(&value));
 }
