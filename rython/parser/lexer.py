@@ -27,9 +27,10 @@ class BasicLexer:
         t.value = t.value[1:-1]
         return t
 
-    @lex.TOKEN(r"\d+\.\d*|\.\d+|\d+\.")
-    def t_NUMBER(self, t):
+    @lex.TOKEN(r"\d+\.\d*|\.\d+")
+    def t_FLOAT(self, t):
         t.value = float(t.value)
+        t.type = "FLOAT"
         return t
 
     @lex.TOKEN(r"\d+")
