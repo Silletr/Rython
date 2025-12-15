@@ -15,7 +15,7 @@ pub fn fibonacci(n: i64) -> i64 {
     let mut a = 0i64;
     let mut b = 1i64;
     for _ in 2..=n {
-        let temp = a + b;
+        let temp = a.checked_add(b).expect("Fibonacci overflow");
         a = b;
         b = temp;
     }

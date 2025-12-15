@@ -11,6 +11,6 @@ use pyo3::prelude::*;
 ///     1.6
 ///     >>> divide(10, 5)
 ///     2
-pub fn divide(a: f64, b: f64) -> f64 {
-    a / b
+pub fn divide(a: f64, b: f64) -> PyResult<f64> {
+    Ok(a / b)
 }

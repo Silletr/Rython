@@ -2,10 +2,21 @@ from ply import lex
 
 
 class BasicLexer:
-    tokens = ("NAME", "NUMBER", "FLOAT", "STRING", "COLON", "EQUALS")
-    literals = {"=", "+", "-", "/", "*", "(", ")", ",", ";"}
+    tokens = (
+        "NAME",
+        "NUMBER",
+        "FLOAT",
+        "STRING",
+        "COLON",
+        "EQUALS",
+        "FUNCTION",
+        "ARROW",
+    )
+    literals = {"=", "+", "-", "/", "*", "(", ")", ",", ";", ":"}
 
     t_ignore = " \t"
+    t_FUNCTION = r"function_define"
+    t_ARROW = r"->"
 
     # === Commentaries ===
     @lex.TOKEN(r"\#.*")

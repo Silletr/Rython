@@ -47,6 +47,14 @@ class VarDecl:
 
 
 @dataclass
+class FunctionDef:
+    name: str
+    args: List[VarDecl]
+    return_type: str
+    body: List[Any]
+
+
+@dataclass
 class Program:
     body: List[Any]
 
@@ -95,6 +103,11 @@ class BasicParser:
         p[0] = Number(p[1])
 
     @staticmethod
+    def p_expression_float(p):
+        "expression : FLOAT"
+        p[0] = Float(p[1])
+
+    @staticmethod
     def p_expression_string(p):
         "expression : STRING"
         p[0] = String(p[1])
@@ -103,6 +116,31 @@ class BasicParser:
     def p_expression_name(p):
         "expression : NAME"
         p[0] = Var(p[1])
+
+    @staticmethod
+    def p_statement_function(p):
+        "statement : FUNCTION NAME '(' parameters ')' ARROW NAME ':' statement_list"
+        # function main(a: int) -> int:
+        p[0] = FunctionDef(name=p[2], args=p[4], return_type=p[7], body=p[9])
+
+    @staticmethod
+    def p_parameters(p):
+        """parameters : parameter
+        | parameters ',' parameter"""
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
+
+    @staticmethod
+    def p_parameter(p):
+        "parameter : NAME COLON NAME"
+        p[0] = VarDecl(name=p[1], type=p[3], value=None)
+
+    @staticmethod
+    def p_parameters_empty(p):
+        "parameters :"
+        p[0] = []
 
     @staticmethod
     def p_expression_call(p):
