@@ -11,12 +11,13 @@
 ---
 ## 📝 Description
 **filename1.type**:
-  - change 1
-  - change 2
-
+  - *change 1*
+  - *change 2*
+---
 **filename2.type2**:
-  - change 1
-  - change 2
+  - *change 1*
+  - *change 2*
+---
 
 ## 🧾 Related Issues / Tickets
 **Link any related issue or task if available**
