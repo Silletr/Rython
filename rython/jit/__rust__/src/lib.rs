@@ -13,10 +13,12 @@ use math::minus_func::minus;
 use math::multiply_func::multiply;
 
 // Print functions
+use print_functions::concatenate_print::print_con;
 use print_functions::float_print::print_float;
 use print_functions::integer_print::print_integer;
 use print_functions::string_print::print_string;
 
+// Function defining
 use function::function_define::function_define;
 
 #[pyfunction]
@@ -39,7 +41,7 @@ fn rython_jit(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(print_float, m)?)?;
     m.add_function(wrap_pyfunction!(print_integer, m)?)?;
     m.add_function(wrap_pyfunction!(print_string, m)?)?;
-
+    m.add_function(wrap_pyfunction!(print_con, m)?)?;
     m.add_function(wrap_pyfunction!(function_define, m)?)?;
     Ok(())
 }
