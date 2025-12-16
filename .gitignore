@@ -1,5 +1,4 @@
 # Rust
-rython/rython_jit.so
 rython/jit/__rust__/target/
 rython/hand_test/__pycache__/
 rython/tests/__pycache__/
