@@ -31,10 +31,10 @@ def run_binop(ast):
     left = run_ast(ast.left)
     right = run_ast(ast.right)
     op_map = {
-        "+": rython_jit.add,
-        "-": lambda left, right: left - right,
-        "*": rython_jit.multiply,
-        "/": lambda left, right: left / right,
+        "+": rython_jit.add,  # pyright: ignore
+        "-": rython_jit.minus,  # pyright: ignore
+        "*": rython_jit.multiply,  # pyright: ignore
+        "/": rython_jit.divide,  # pyright: ignore
     }
     func = op_map.get(ast.op)
     if func is None:
@@ -93,8 +93,6 @@ def run_ast(ast):
 
 
 # —————————————— CLI ——————————————
-
-
 def main():
     if len(sys.argv) < 2:
         print("Usage: ./rython_runner.py <file.ry>")
