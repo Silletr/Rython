@@ -1,5 +1,8 @@
 import rython_jit
 
-print(rython_jit.add(2, 3))  # 5
-print(rython_jit.fibonacci(20))  # 6765
-print(rython_jit.hello_rust("while True:"))  # "Hello from Rust, while True:!"
+result = rython_jit.jit_test(10, 20)
+print(f"The result of 10 + 20 is {result}")
+
+assert result == 30
+
+print("JIT test passed!")
