@@ -1,2 +1,0 @@
-function_define main(a: int):
-    print_int(a)

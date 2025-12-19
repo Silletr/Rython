@@ -34,6 +34,9 @@ impl<'ctx> Compiler<'ctx> {
         let malloc_fn_type = i8_ptr_type.fn_type(&[size_t_type.into()], false);
         module.add_function("rython_malloc", malloc_fn_type, None);
 
+        let print_fn_type = void_type.fn_type(&[i8_ptr_type.into()], false);
+        module.add_function("rython_print_str", print_fn_type, None);
+
         Compiler {
             context,
             module,
@@ -154,11 +157,17 @@ impl<'ctx> Compiler<'ctx> {
                     .expect("rython_malloc should return a pointer")
                     .into_pointer_value();
                 
-                let _global_str = self.builder.build_global_string_ptr(s, "str_const").unwrap();
+                let global_str = self.builder.build_global_string_ptr(s, "str_const").unwrap();
                 
-                // Copy the string (using memcpy or manual loop for simplicity in IR)
-                // For now, let's just return the malloced pointer to show it's being called.
-                // In a real implementation we would memcpy.
+                // Use LLVM's memcpy to copy the string into the GC heap
+                let i64_type = self.context.i64_type();
+                let _is_volatile = self.context.bool_type().const_int(0, false);
+                
+                // We use build_memcpy if available or just cast and return for now.
+                // In Inkwell 0.7.1, it's easier to just cast the pointer for the demo 
+                // but let's at least make the call work.
+                self.builder.build_memcpy(ptr, 1, global_str.as_pointer_value(), 1, i64_type.const_int(s_len + 1, false)).unwrap();
+                
                 ptr.as_basic_value_enum()
             }
             Expr::Var(name) => {
@@ -186,18 +195,24 @@ impl<'ctx> Compiler<'ctx> {
                 }
             }
             Expr::Call { func, args } => {
-                let function = self.module.get_function(func).expect("Function not found");
+                let function = self.module.get_function(func)
+                    .unwrap_or_else(|| panic!("Function '{}' not found in module", func));
                 let compiled_args: Vec<inkwell::values::BasicMetadataValueEnum> = args
                     .iter()
                     .map(|arg| self.compile_expr(arg).into())
                     .collect();
                 
                 let call = self.builder.build_call(function, &compiled_args, "calltmp").unwrap();
-                // Use explicit trait method call if needed, but import AnyValue is already done.
-                // CallSiteValue implements AnyValue in Inkwell 0.7.1
+                
+                // Handle void functions gracefully
+                if function.get_type().get_return_type().is_none() {
+                    // Return a dummy value (0) for void calls used in expressions
+                    return self.context.i64_type().const_int(0, false).into();
+                }
+
                 let any_val = call.as_any_value_enum();
                 BasicValueEnum::try_from(any_val)
-                    .expect("Function should return a basic value")
+                    .unwrap_or_else(|_| panic!("Function '{}' should return a basic value but returned {:?}", func, any_val))
             }
         }
     }

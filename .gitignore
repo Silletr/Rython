@@ -1,5 +1,5 @@
 # Rust
-rython/jit/__rust__/target/
+rython/jit/__rust__
 rython/hand_test/__pycache__/
 rython/tests/__pycache__/
 # Parser output
@@ -12,3 +12,5 @@ rython/parser/parsetab.*
 *.so
 *.pyd
 *.whl
+
+target

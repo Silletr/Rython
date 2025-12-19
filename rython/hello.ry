@@ -1,0 +1,3 @@
+function main() -> int:
+    rython_print_str("Hello World! This is a standalone binary compiled by Rython.")
+    return 0

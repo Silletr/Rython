@@ -52,6 +52,9 @@ fn jit_run(code: &str) -> PyResult<i64> {
 
     let malloc_fn = compiler.module.get_function("rython_malloc").unwrap();
     execution_engine.add_global_mapping(&malloc_fn, runtime::rython_malloc as usize);
+
+    let print_fn = compiler.module.get_function("rython_print_str").unwrap();
+    execution_engine.add_global_mapping(&print_fn, runtime::rython_print_str as usize);
     
     unsafe {
         let ok_main: JitFunction<MainFunc> = execution_engine.get_function("main")
@@ -81,7 +84,7 @@ fn compile_to_native(code: &str) -> PyResult<String> {
 
 #[pyfunction]
 fn compile_to_object(code: &str, output_path: &str) -> PyResult<()> {
-    let ast = parser::parse_rython_code(code).map_err(|e| PyValueError::new_err(format!("{}", e)))?;
+    let ast = parser::parse_rython_code(code.trim()).map_err(|e| PyValueError::new_err(format!("{}", e)))?;
     let context = Context::create();
     let mut compiler = compiler::Compiler::new(&context, "obj_mod");
     compiler.compile_program(&ast);

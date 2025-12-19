@@ -5,7 +5,7 @@ import sys
 try:
     import rython_jit
 except ImportError:
-    # Try release first, then debug
+    # Look in 'target' at the current level (since we moved everything to the root)
     lib_path_rel = os.path.join(os.path.dirname(__file__), "target", "release")
     lib_path_dbg = os.path.join(os.path.dirname(__file__), "target", "debug")
     
@@ -18,7 +18,6 @@ except ImportError:
         rython_jit = importlib.import_module("rython_jit")
     except ImportError:
         # Fallback for systems that prefix shared libraries with 'lib' (like Unix/WSL)
-        # We try to symlink or just load it if it has the prefix
         for folder in [lib_path_rel, lib_path_dbg, os.path.dirname(__file__)]:
             if not folder or not os.path.exists(folder):
                 continue

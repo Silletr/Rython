@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-try:
-    from bridge import compile_native, rython_jit
-except ImportError:
-    from rython.jit.__rust__.bridge import compile_native, rython_jit
+import bridge
+from bridge import compile_native, rython_jit
 
 # A simple Rython code snippet to test the JIT bridge
 rython_code = """
@@ -39,6 +37,14 @@ function main() -> str:
         print("SUCCESS: GC allocated memory successfully!")
     else:
         print("FAILURE: GC returned null pointer")
+    # --- Hello World Test ---
+    print("\n--- Testing Hello World (Functional I/O) ---")
+    hello_code = """
+function main() -> int:
+    rython_print_str("Hello World! Rython is now functional with LLVM IR!")
+    return 0
+"""
+    rython_jit.jit_run(hello_code.strip())
     print("---------------------------------")
 
 
