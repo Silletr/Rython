@@ -97,7 +97,7 @@ impl RythonParser {
     fn string(node: Node) -> Result<Expr> {
         let s = node.as_str();
         // Remove quotes
-        Ok(Expr::String(s[1..s.len()-1].to_string()))
+        Ok(Expr::String(s[1..s.len() - 1].to_string()))
     }
 
     fn r#type(node: Node) -> Result<Type> {
@@ -112,7 +112,7 @@ impl RythonParser {
     fn var_ref(node: Node) -> Result<Expr> {
         Ok(Expr::Var(node.as_str().to_string()))
     }
-    
+
     fn call(node: Node) -> Result<Expr> {
         match_nodes!(node.into_children(),
             [identifier(func), expression(args)..] => {
@@ -165,13 +165,13 @@ impl RythonParser {
             }
         )
     }
-    
+
     fn return_statement(node: Node) -> Result<Statement> {
         match_nodes!(node.into_children(),
             [expression(expr)] => Ok(Statement::Return(expr))
         )
     }
-    
+
     fn param(node: Node) -> Result<(String, Type)> {
         match_nodes!(node.into_children(),
             [identifier(name), r#type(type_def)] => Ok((name, type_def))

@@ -1,11 +1,11 @@
-use pyo3::{prelude::*, exceptions::PyValueError};
+use pyo3::{exceptions::PyValueError, prelude::*};
 
 // Import modules
+pub mod compiler;
 mod function;
 mod math;
-mod print_functions;
-pub mod compiler;
 pub mod parser;
+mod print_functions;
 
 // Math operations
 use math::add_func::add;
@@ -31,8 +31,9 @@ fn hello_rust(name: &str) -> PyResult<String> {
 #[pyfunction]
 fn jit_test() -> PyResult<u64> {
     let code = "function main() -> int:\n    return 42 + 8 * 2";
-    let ast = parser::parse_rython_code(code).map_err(|e| PyValueError::new_err(format!("{}", e)))?;
-    
+    let ast =
+        parser::parse_rython_code(code).map_err(|e| PyValueError::new_err(format!("{}", e)))?;
+
     let mut interpreter = compiler::Interpreter::new();
     match interpreter.run(&ast) {
         Some(val) => Ok(val.to_u64()),
@@ -61,7 +62,7 @@ fn rython_jit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
     m.add_function(wrap_pyfunction!(jit_test, m)?)?;
     m.add_function(wrap_pyfunction!(compile_to_native, m)?)?;
-    
+
     // Math operations
     m.add_function(wrap_pyfunction!(add, m)?)?;
     m.add_function(wrap_pyfunction!(minus, m)?)?;
