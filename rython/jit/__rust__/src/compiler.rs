@@ -1,4 +1,4 @@
-use crate::parser::{Expr, Program, Statement, Op};
+use crate::parser::{Expr, Op, Program, Statement};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -35,7 +35,9 @@ impl Interpreter {
         // Look for 'main' function first
         let main_func = program.body.iter().find_map(|stmt| {
             if let Statement::FunctionDef(f) = stmt {
-                if f.name == "main" { return Some(f); }
+                if f.name == "main" {
+                    return Some(f);
+                }
             }
             None
         });
@@ -76,7 +78,11 @@ impl Interpreter {
             Expr::Number(n) => RuntimeValue::Int(*n),
             Expr::Float(f) => RuntimeValue::Float(*f),
             Expr::String(s) => RuntimeValue::Str(s.clone()),
-            Expr::Var(name) => self.variables.get(name).cloned().unwrap_or(RuntimeValue::Int(0)),
+            Expr::Var(name) => self
+                .variables
+                .get(name)
+                .cloned()
+                .unwrap_or(RuntimeValue::Int(0)),
             Expr::BinOp { left, op, right } => {
                 let l = self.eval_expr(left);
                 let r = self.eval_expr(right);
