@@ -1,0 +1,38 @@
+// Based on rython/parser/ast.py
+
+WHITESPACE = @_ {" " | "\t" | "\n" | "\r"}
+COMMENT = @_ {# ~ (!("\n" | "\r") ~ ANY)*}
+
+// Atoms
+number = @_ {"-?" ~ ASCII_DIGIT+}
+float = @_ {"-?" ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+}
+string = @_ {"\"" ~ (!"\"" ~ ANY)* ~ "\""}
+identifier = @_ {(ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")*}
+
+type = { "int" | "float" | "str" }
+
+// Expressions
+expression = @_ {term ~ (("+" | "-" | "*" | "/") ~ term)*}
+term = { call | var_ref | number | float | string | "(" ~ expression ~ ")" }
+
+var_ref = { identifier }
+call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
+
+// Statements
+statement = { function_def | var_decl | return_statement | expression }
+
+var_decl = { identifier ~ ":" ~ type ~ "=" ~ expression }
+
+return_statement = { "return" ~ expression }
+
+function_def = {
+    "function" ~ identifier ~
+    "(" ~ (param ~ ("," ~ param)*)? ~ ")" ~
+    "->" ~ type ~
+    ":" ~ NEWLINE* ~
+    (statement ~ (NEWLINE | ";"))*
+}
+param = { identifier ~ ":" ~ type }
+
+// Top-level
+program = { SOI ~ (statement ~ (NEWLINE | ";"))* ~ EOI }

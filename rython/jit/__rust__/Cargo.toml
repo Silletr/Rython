@@ -8,4 +8,9 @@ name = "rython_jit"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.27", features = ["extension-module", "auto-initialize"] }
+pyo3 = { version = "0.23.0", features = ["extension-module", "auto-initialize"] }
+# inkwell = { version = "0.2.0", features = ["jit"] }
+libc = "0.2.153"
+pest = "2.7.7"
+pest_derive = "2.7.7"
+pest_consume = "1.1.3"
