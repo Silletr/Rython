@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.23.0", features = ["extension-module", "auto-initialize"] }
-# inkwell = { version = "0.2.0", features = ["jit"] }
+inkwell = { version = "0.7.1", features = ["llvm15-0", "target-all"] }
 libc = "0.2.153"
 pest = "2.7.7"
 pest_derive = "2.7.7"

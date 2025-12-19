@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use pest::Parser;
+use pest_derive::Parser;
 use pest_consume::{match_nodes, Error, Parser as PestConsumer};
 
 #[derive(Debug, Clone)]
@@ -81,22 +81,15 @@ impl RythonParser {
     }
 
     fn number(node: Node) -> Result<Expr> {
-        node.as_str()
-            .parse::<i64>()
-            .map(Expr::Number)
-            .map_err(|e| node.error(e))
+        Ok(Expr::Number(node.as_str().parse().map_err(|e| node.error(e))?))
     }
 
     fn float(node: Node) -> Result<Expr> {
-        node.as_str()
-            .parse::<f64>()
-            .map(Expr::Float)
-            .map_err(|e| node.error(e))
+        Ok(Expr::Float(node.as_str().parse().map_err(|e| node.error(e))?))
     }
 
     fn string(node: Node) -> Result<Expr> {
         let s = node.as_str();
-        // Remove quotes
         Ok(Expr::String(s[1..s.len()-1].to_string()))
     }
 
@@ -114,37 +107,45 @@ impl RythonParser {
     }
     
     fn call(node: Node) -> Result<Expr> {
-        match_nodes!(node.into_children(),
+        match_nodes!(node.into_children();
             [identifier(func), expression(args)..] => {
                 Ok(Expr::Call { func, args: args.collect() })
-            }
+            },
         )
     }
 
     fn term(node: Node) -> Result<Expr> {
-        match_nodes!(node.into_children(),
+        match_nodes!(node.into_children();
             [number(n)] => Ok(n),
             [float(f)] => Ok(f),
             [string(s)] => Ok(s),
             [call(c)] => Ok(c),
             [var_ref(v)] => Ok(v),
-            [expression(e)] => Ok(e)
+            [expression(e)] => Ok(e),
         )
     }
 
     fn expression(node: Node) -> Result<Expr> {
+        let span = node.as_span();
         let mut children = node.into_children();
-        let mut res = Self::term(children.next().unwrap())?;
+        let first = children.next().ok_or_else(|| {
+             Error::new_from_span(pest::error::ErrorVariant::CustomError { message: "Empty expression".to_string() }, span)
+        })?;
+        let mut res = Self::term(first)?;
 
         while let Some(op_node) = children.next() {
-            let op = match op_node.as_str() {
+            let op_str = op_node.as_str();
+            let op = match op_str {
                 "+" => Op::Add,
                 "-" => Op::Sub,
                 "*" => Op::Mul,
                 "/" => Op::Div,
                 _ => unreachable!(),
             };
-            let right = Self::term(children.next().unwrap())?;
+            let next_term = children.next().ok_or_else(|| {
+                 Error::new_from_span(pest::error::ErrorVariant::CustomError { message: "Expected term after operator".to_string() }, span)
+            })?;
+            let right = Self::term(next_term)?;
             res = Expr::BinOp {
                 left: Box::new(res),
                 op,
@@ -155,65 +156,80 @@ impl RythonParser {
     }
 
     fn var_decl(node: Node) -> Result<Statement> {
-        match_nodes!(node.into_children(),
+        match_nodes!(node.into_children();
             [identifier(name), r#type(type_def), expression(value)] => {
                 Ok(Statement::VarDecl(VarDecl {
                     name,
                     type_def,
                     value,
                 }))
-            }
+            },
         )
     }
     
     fn return_statement(node: Node) -> Result<Statement> {
-        match_nodes!(node.into_children(),
-            [expression(expr)] => Ok(Statement::Return(expr))
+        match_nodes!(node.into_children();
+            [expression(expr)] => Ok(Statement::Return(expr)),
         )
     }
     
     fn param(node: Node) -> Result<(String, Type)> {
-        match_nodes!(node.into_children(),
-            [identifier(name), r#type(type_def)] => Ok((name, type_def))
+        match_nodes!(node.into_children();
+            [identifier(name), r#type(type_def)] => Ok((name, type_def)),
+        )
+    }
+
+    fn params(node: Node) -> Result<Vec<(String, Type)>> {
+        match_nodes!(node.into_children();
+            [param(p)..] => Ok(p.collect()),
+        )
+    }
+
+    fn block(node: Node) -> Result<Vec<Statement>> {
+        match_nodes!(node.into_children();
+            [statement(s)..] => Ok(s.collect()),
         )
     }
 
     fn function_def(node: Node) -> Result<Statement> {
-        match_nodes!(node.into_children(),
+        match_nodes!(node.into_children();
             [
                 identifier(name),
-                param(args)..,
+                params(args),
                 r#type(return_type),
-                statement(body)..
+                block(body)
             ] => {
                 Ok(Statement::FunctionDef(FunctionDef {
                     name,
-                    args: args.collect(),
+                    args,
                     return_type,
-                    body: body.collect(),
+                    body,
                 }))
-            }
+            },
         )
     }
 
     fn statement(node: Node) -> Result<Statement> {
-        match_nodes!(node.into_children(),
+        match_nodes!(node.into_children();
             [var_decl(decl)] => Ok(decl),
             [function_def(func)] => Ok(func),
             [return_statement(ret)] => Ok(ret),
-            [expression(expr)] => Ok(Statement::Expr(expr))
+            [expression(expr)] => Ok(Statement::Expr(expr)),
         )
     }
 
     fn program(node: Node) -> Result<Program> {
-        match_nodes!(node.into_children(),
-            [statement(stmts).., EOI(_)] => Ok(Program { body: stmts.collect() })
+        match_nodes!(node.into_children();
+            [statement(stmts).., EOI(_)] => Ok(Program { body: stmts.collect() }),
         )
     }
 }
 
 pub fn parse_rython_code(code: &str) -> Result<Program> {
-    let nodes = RythonParser::parse(Rule::program, code)?;
-    let program_node = nodes.single()?;
+    let nodes = <RythonParser as PestConsumer>::parse(Rule::program, code)
+        .map_err(|e: pest::error::Error<Rule>| {
+            Error::new_from_span(pest::error::ErrorVariant::CustomError { message: e.to_string() }, pest::Span::new(code, 0, code.len()).unwrap())
+        })?;
+    let program_node = nodes.single().map_err(|e: Error<Rule>| e)?;
     RythonParser::program(program_node)
 }

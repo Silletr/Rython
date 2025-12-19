@@ -1,19 +1,19 @@
 // Based on rython/parser/ast.py
 
-WHITESPACE = @_ {" " | "\t" | "\n" | "\r"}
-COMMENT = @_ {# ~ (!("\n" | "\r") ~ ANY)*}
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT = _{ "#" ~ (!("\n" | "\r") ~ ANY)* }
 
 // Atoms
-number = @_ {"-?" ~ ASCII_DIGIT+}
-float = @_ {"-?" ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+}
-string = @_ {"\"" ~ (!"\"" ~ ANY)* ~ "\""}
-identifier = @_ {(ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")*}
+number = @{ "-"? ~ ASCII_DIGIT+ }
+float = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 type = { "int" | "float" | "str" }
 
 // Expressions
-expression = @_ {term ~ (("+" | "-" | "*" | "/") ~ term)*}
-term = { call | var_ref | number | float | string | "(" ~ expression ~ ")" }
+expression = { term ~ (("+" | "-" | "*" | "/") ~ term)* }
+term = { "(" ~ expression ~ ")" | call | var_ref | float | number | string }
 
 var_ref = { identifier }
 call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
@@ -25,14 +25,18 @@ var_decl = { identifier ~ ":" ~ type ~ "=" ~ expression }
 
 return_statement = { "return" ~ expression }
 
+params = { (param ~ ("," ~ param)*)? }
+
+// A block is a sequence of statements separated by newlines or semicolons
+block = { (statement | NEWLINE | ";")* }
+
 function_def = {
     "function" ~ identifier ~
-    "(" ~ (param ~ ("," ~ param)*)? ~ ")" ~
+    "(" ~ params ~ ")" ~
     "->" ~ type ~
-    ":" ~ NEWLINE* ~
-    (statement ~ (NEWLINE | ";"))*
+    ":" ~ block
 }
 param = { identifier ~ ":" ~ type }
 
-// Top-level
-program = { SOI ~ (statement ~ (NEWLINE | ";"))* ~ EOI }
+// Top-level - permissive about newlines and semicolons
+program = { (statement | NEWLINE | ";")* ~ EOI }
