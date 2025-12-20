@@ -1,7 +1,3 @@
-# Rust
-rython/jit/__rust__
-rython/hand_test/__pycache__/
-rython/tests/__pycache__/
 # Parser output
 rython/parser/parser.out
 rython/parser/parsetab.py
@@ -14,3 +10,6 @@ rython/parser/parsetab.*
 *.whl
 
 target
+dist
+build_py
+__pycache__

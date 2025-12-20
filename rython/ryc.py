@@ -2,8 +2,7 @@ import os
 import sys
 import subprocess
 import argparse
-import bridge
-from bridge import rython_jit
+# Removed direct bridge import to support standalone mode
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -62,8 +61,29 @@ def get_config():
 
 def print_banner():
     console.print(BANNER)
-    lib_path = getattr(rython_jit, "__file__", "unknown")
-    console.print(f"[dim]Runtime Loaded: {lib_path}[/dim]\n")
+    # Binary location diagnostic
+    rythonc_path = find_rythonc()
+    console.print(f"[dim]Compiler Engine: {rythonc_path}[/dim]\n")
+
+def find_rythonc():
+    """Locate the rythonc binary relative to the current script or globally."""
+    # 1. Check same directory as the script/executable (Portable mode)
+    script_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
+    
+    # 2. Check sibling 'dist' (Local dev mode)
+    local_dist = os.path.join(os.path.dirname(script_dir), "dist")
+    
+    # Names to check (with .exe for Windows support)
+    names = ["rythonc", "rythonc.exe"]
+    search_dirs = [script_dir, local_dist, "./dist", "target/release", "target/debug"]
+    
+    for d in search_dirs:
+        for name in names:
+            p = os.path.join(d, name)
+            if os.path.exists(p):
+                return os.path.abspath(p)
+                
+    return "rythonc" # Fallback to PATH
 
 def compile_rython(input_file, output_executable, save_obj=False):
     if not os.path.exists(input_file):
@@ -90,18 +110,24 @@ def compile_rython(input_file, output_executable, save_obj=False):
             obj_file = input_file + ".o"
 
         try:
-            # We need to make sure 'code' is available
-            with open(input_file, 'r') as f:
-                code_content = f.read().strip()
-            rython_jit.compile_to_object(code_content, obj_file)
+            # We invoke the standalone Rust compiler binary
+            rythonc = find_rythonc()
+            cmd = [rythonc, input_file, "-o", obj_file]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise Exception(result.stderr or result.stdout)
+                
         except Exception as e:
             progress.stop()
             console.print(Panel(f"[bold red]Compilation Error:[/bold red]\n{e}", title="Error", border_style="red"))
             if os.path.exists(obj_file) and obj_file.startswith("/dev/shm"):
                 os.remove(obj_file)
             sys.exit(1)
+
         # 2. Find the runtime library
-        lib_dir = os.path.dirname(rython_jit.__file__)
+        rythonc_dir = os.path.dirname(find_rythonc())
+        lib_dir = rythonc_dir if rythonc_dir else "."
         lib_name = "rython_jit"
 
         # 3. Choose Linker
@@ -215,7 +241,7 @@ def print_custom_help(parser):
     from rich.table import Table
     
     print_banner()
-    console.print(r"[bold white]Usage:[/bold white] [cyan]ryc[/cyan] [yellow]<command>[/yellow] [dim]\[options][/dim]\n")
+    console.print(r"[bold white]Usage:[/bold white] [cyan]charge[/cyan] [yellow]<command>[/yellow] [dim]\[options][/dim]\n")
     
     # Subcommands Table
     table = Table(box=None, padding=(0, 2), show_header=False)
@@ -234,8 +260,8 @@ def print_custom_help(parser):
     console.print("  [yellow]-s, --save-obj[/yellow]     Keep the intermediate .o file")
     
     console.print("\n[bold white]Examples:[/bold white]")
-    console.print("  [dim]$[/dim] [cyan]ryc[/cyan] build [yellow]-s[/yellow]")
-    console.print("  [dim]$[/dim] [cyan]ryc[/cyan] run [dim]hello.ry[/dim]")
+    console.print("  [dim]$[/dim] [cyan]charge[/cyan] build [yellow]-s[/yellow]")
+    console.print("  [dim]$[/dim] [cyan]charge[/cyan] run [dim]hello.ry[/dim]")
     console.print("")
 
 if __name__ == "__main__":
@@ -271,13 +297,13 @@ if __name__ == "__main__":
 
     if args.help or (args.command and hasattr(args, 'help') and args.help):
         if args.command == "build":
-            console.print(r"\n[bold yellow]ryc build[/bold yellow] [dim]\[file] [-o output][/dim]")
+            console.print(r"\n[bold yellow]charge build[/bold yellow] [dim]\[file] [-o output][/dim]")
             console.print("Compiles a project based on [bold]Charge.toml[/bold] or a single [bold].ry[/bold] file.\n")
         elif args.command == "run":
-            console.print(r"\n[bold yellow]ryc run[/bold yellow] [dim]\[file] [-o output][/dim]")
+            console.print(r"\n[bold yellow]charge run[/bold yellow] [dim]\[file] [-o output][/dim]")
             console.print("Builds and executes the project or a single [bold].ry[/bold] file.\n")
         elif args.command == "init":
-            console.print("\n[bold yellow]ryc init[/bold yellow]")
+            console.print("\n[bold yellow]charge init[/bold yellow]")
             console.print("Generates a [bold]Charge.toml[/bold] and a template [bold]main.ry[/bold].\n")
         else:
             print_custom_help(parser)
