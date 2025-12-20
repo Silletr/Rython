@@ -125,6 +125,16 @@ impl RythonParser {
         )
     }
 
+    fn bin_op(node: Node) -> Result<Op> {
+        match node.as_str() {
+            "+" => Ok(Op::Add),
+            "-" => Ok(Op::Sub),
+            "*" => Ok(Op::Mul),
+            "/" => Ok(Op::Div),
+            _ => unreachable!(),
+        }
+    }
+
     fn expression(node: Node) -> Result<Expr> {
         let span = node.as_span();
         let mut children = node.into_children();
@@ -134,14 +144,7 @@ impl RythonParser {
         let mut res = Self::term(first)?;
 
         while let Some(op_node) = children.next() {
-            let op_str = op_node.as_str();
-            let op = match op_str {
-                "+" => Op::Add,
-                "-" => Op::Sub,
-                "*" => Op::Mul,
-                "/" => Op::Div,
-                _ => unreachable!(),
-            };
+            let op = Self::bin_op(op_node)?;
             let next_term = children.next().ok_or_else(|| {
                  Error::new_from_span(pest::error::ErrorVariant::CustomError { message: "Expected term after operator".to_string() }, span)
             })?;
@@ -186,9 +189,13 @@ impl RythonParser {
     }
 
     fn block(node: Node) -> Result<Vec<Statement>> {
-        match_nodes!(node.into_children();
-            [statement(s)..] => Ok(s.collect()),
-        )
+        let mut stmts = Vec::new();
+        for child in node.into_children() {
+            if child.as_rule() == Rule::statement {
+                stmts.push(Self::statement(child)?);
+            }
+        }
+        Ok(stmts)
     }
 
     fn function_def(node: Node) -> Result<Statement> {
@@ -219,9 +226,14 @@ impl RythonParser {
     }
 
     fn program(node: Node) -> Result<Program> {
-        match_nodes!(node.into_children();
-            [statement(stmts).., EOI(_)] => Ok(Program { body: stmts.collect() }),
-        )
+        let mut stmts = Vec::new();
+        for child in node.into_children() {
+            match child.as_rule() {
+                Rule::statement => stmts.push(Self::statement(child)?),
+                _ => {} // Skip EOI, SOI, etc.
+            }
+        }
+        Ok(Program { body: stmts })
     }
 }
 

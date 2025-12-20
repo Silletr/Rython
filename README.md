@@ -1,102 +1,97 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)  
 [![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![LLVM](https://img.shields.io/badge/LLVM-15-blue?logo=llvm&logoColor=white)](https://llvm.org)
+
+# Rython
+
+Rython combines **Python's readability** with **Rust's performance** via a high-performance **LLVM-based compiler**.
+
+----------------------------------------------------------------------------------------------
+
+[![Compiler-Pipeline-with-2025-12-19-234220.png](https://i.postimg.cc/25b2KSMn/Compiler-Pipeline-with-2025-12-19-234220.png)](https://postimg.cc/Jy8NyM1h)
+
+----------------------------------------------------------------------------------------------
+
+## Key Features
+
+- **AOT & JIT Compilation**: Build standalone native binaries or execute code on the fly using LLVM 15.
+- **Automatic Memory Management**: Integrated **Boehm-Demers-Weiser** conservative garbage collector.
+- **High Performance**: Native machine code generation for arithmetic and logic.
+- **Python-like Syntax**: Clean and familiar syntax with static type hinting (`x: int = 5`).
+- **Modern CLI**: Professional compiler driver (`ryc.py`) with rich visual feedback.
 
 ---
 
-## Introduction
+## Installation
 
-I think almost everyone has already heard about Rust and Python, right?  
-So here's my idea: this repository is for a **programming language** based on **Rust** (compiler, JIT in future, all math operations) and **Python** (Python-like syntax, but a little different).  
-
-Rython aims to combine Python's readability with Rust's speed. 🦀🐍
-
----
-
-## How to Install and Use
-
-Currently, the language **does not have a compiler yet**.  
-To try it out:
+Rython requires **LLVM 15** and **libgc** to be installed on your system (WSL/Linux recommended).
 
 ```bash
-# Clone repository via SSH
-git clone git@github.com:Silletr/Rython.git
+# Install dependencies
+sudo apt update && sudo apt install llvm-15-dev libgc-dev build-essential clang python3-rich
 
-# Go into the folder and run a test lexer
-cd Rython/
-python3 rython/hand_tests/jit_test.py
+# Clone repository
+git clone https://github.com/Silletr/Rython.git
+cd Rython/rython
+
+# Build the compiler backend
+cargo build
 ```
-
-> [!TIP]
-> Or you can add the alias in your terminal:<br/>
-```bash
-alias rython="YOUR_RYTHON_PATH/rython/test.py"
-```
-
-> [!NOTE]
-> Example of command:<br/>
-`rython filename.ry`
 
 ---
+
+## Usage
+
+### Compilation (AOT)
+To compile a Rython file into a standalone native binary:
+
+```bash
+python3 ryc.py hello.ry -o meu_programa
+./meu_programa
+```
+
+### JIT Execution
+To run code immediately:
+
+```bash
+python3 jit_test_runner.py
+```
+
+---
+
 ## Example Code
-Examples are in the examples/ folder:
-  - *example.py — test outputs*
-  - *example.ry — example Rython file (interpreter is in progress, see `rython/jit/__rust__/src/`)*
-
-**Example Rython code**:
-```rython
-# Variables
-x: int = 5
-y: int = 8
-z: int = x + y * 3
-a: str = "Hi!"
-
-# Print functions
-print_int(z)
-print_con("Sum: %1, Values: %2", z, y)
-print_str("Hello from Rython!")
-# Functions
-fibonacci(15) # Will print: 610
-add(x, y) # Output: 13
-multiply(x, y) # Output: 40
-minus(x, y) # Output: -3
-divide(x,5) # Output: 1
+```python
+function main() -> int:
+    # Variables
+    x: int = 5
+    y: int = 8
+    z: int = x + y * 3
+    
+    # Native Printing (via Runtime)
+    rython_print_str("Hello World! Rython is running on LLVM.")
+    
+    return 0
 ```
----
-
-## Commands / Functions
-
-**Some notable commands in Rython**:
-
-**Strictly-dynamic types — Rust automatically determines the size of your variable based on the type hint, e.g. x: int**
-
-  - print_int() — prints integers
-
-  - print_str() — prints strings
-
-  - print_float() — prints floats
-
-  - print_con() — prints concatenated output, e.g., string + int + float, for convenience
-
-This is to avoid confusing outputs when mixing types and to make code more readable. 🤗
 
 ---
 
-## Roadmap / Future Plans
-
-- [ ] JIT compilation (in progress) ->
-- [ ] Full compiler to generate .bin_ry binaries ->
-- [ ] Expand standard library -> 
-- [ ] Add more examples, tests, and optimizations
+## Roadmap
+- [x] LLVM IR JIT Engine
+- [x] Ahead-of-Time (AOT) Binary Generation
+- [x] Boehm Garbage Collector Integration
+- [x] Professional CLI Driver
+- [ ] Boolean logic and control flow (`if`/`else`)
+- [ ] Complex data types (Lists, Dicts)
+- [ ] Standard Library Expansion
 
 ---
 
 ## How to Contribute
-- Anyone is welcome!
-- Python devs — tests, examples, bug reports
-- Rust devs — runtime optimization, JIT
-- Front-end / Designers — README improvements, examples, tutorials, maybe even creating a website 
+- **Rust Devs**: Optimization, LLVM IR improvements, standard library.
+- **Python Devs**: Tooling, tests, and documentation.
+- **Designers**: Improving the CLI and brand identity.
 
-- Feel free to DM me or open issues/pull requests. Let's make Rython faster than Python and friendlier than Rust together! 🦀🐍
+Credit to **Emanuel71836** for the core architecture and development.
 
 ---
 ![Alt](https://repobeats.axiom.co/api/embed/4fceb7306320287505bc20e9c15a95c2b68cba99.svg "Repobeats analytics image")

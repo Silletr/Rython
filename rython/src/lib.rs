@@ -47,14 +47,16 @@ fn jit_run(code: &str) -> PyResult<i64> {
         .map_err(|e| PyValueError::new_err(format!("Failed to create JIT: {}", e)))?;
     
     // Explicitly map runtime symbols for the JIT engine
-    let init_fn = compiler.module.get_function("rython_mem_init").unwrap();
-    execution_engine.add_global_mapping(&init_fn, runtime::rython_mem_init as usize);
-
-    let malloc_fn = compiler.module.get_function("rython_malloc").unwrap();
-    execution_engine.add_global_mapping(&malloc_fn, runtime::rython_malloc as usize);
-
-    let print_fn = compiler.module.get_function("rython_print_str").unwrap();
-    execution_engine.add_global_mapping(&print_fn, runtime::rython_print_str as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_mem_init").unwrap(), runtime::rython_mem_init as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_malloc").unwrap(), runtime::rython_malloc as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_print_str").unwrap(), runtime::rython_print_str as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_print_int").unwrap(), runtime::rython_print_int as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_print_float").unwrap(), runtime::rython_print_float as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_add").unwrap(), runtime::rython_add as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_minus").unwrap(), runtime::rython_minus as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_multiply").unwrap(), runtime::rython_multiply as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_divide").unwrap(), runtime::rython_divide as usize);
+    execution_engine.add_global_mapping(&compiler.module.get_function("rython_fibonacci").unwrap(), runtime::rython_fibonacci as usize);
     
     unsafe {
         let ok_main: JitFunction<MainFunc> = execution_engine.get_function("main")

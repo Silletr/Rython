@@ -26,16 +26,21 @@ impl<'ctx> Compiler<'ctx> {
         
         let void_type = context.void_type();
         let i8_ptr_type = context.ptr_type(inkwell::AddressSpace::default());
-        let size_t_type = context.i64_type();
+        let int_type = context.i64_type();
+        let float_type = context.f64_type();
 
-        let init_fn_type = void_type.fn_type(&[], false);
-        module.add_function("rython_mem_init", init_fn_type, None);
+        module.add_function("rython_mem_init", void_type.fn_type(&[], false), None);
+        module.add_function("rython_malloc", i8_ptr_type.fn_type(&[int_type.into()], false), None);
+        module.add_function("rython_print_str", void_type.fn_type(&[i8_ptr_type.into()], false), None);
+        module.add_function("rython_print_int", void_type.fn_type(&[int_type.into()], false), None);
+        module.add_function("rython_print_float", void_type.fn_type(&[float_type.into()], false), None);
 
-        let malloc_fn_type = i8_ptr_type.fn_type(&[size_t_type.into()], false);
-        module.add_function("rython_malloc", malloc_fn_type, None);
-
-        let print_fn_type = void_type.fn_type(&[i8_ptr_type.into()], false);
-        module.add_function("rython_print_str", print_fn_type, None);
+        let binary_int_fn_type = int_type.fn_type(&[int_type.into(), int_type.into()], false);
+        module.add_function("rython_add", binary_int_fn_type, None);
+        module.add_function("rython_minus", binary_int_fn_type, None);
+        module.add_function("rython_multiply", binary_int_fn_type, None);
+        module.add_function("rython_divide", binary_int_fn_type, None);
+        module.add_function("rython_fibonacci", int_type.fn_type(&[int_type.into()], false), None);
 
         Compiler {
             context,
@@ -46,13 +51,27 @@ impl<'ctx> Compiler<'ctx> {
     }
 
     pub fn compile_program(&mut self, program: &Program) {
+        let mut top_level_code = Vec::new();
+        
+        // Pass 1: Compile all explicit functions
         for stmt in &program.body {
             match stmt {
                 Statement::FunctionDef(func) => {
                     self.compile_function(func);
                 }
-                _ => {}
+                _ => top_level_code.push(stmt.clone()),
             }
+        }
+
+        // Pass 2: Wrap top-level code in an implicit main if needed
+        if !top_level_code.is_empty() && self.module.get_function("main").is_none() {
+            let main_def = FunctionDef {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Type::Int,
+                body: top_level_code,
+            };
+            self.compile_function(&main_def);
         }
     }
 
@@ -195,8 +214,22 @@ impl<'ctx> Compiler<'ctx> {
                 }
             }
             Expr::Call { func, args } => {
-                let function = self.module.get_function(func)
-                    .unwrap_or_else(|| panic!("Function '{}' not found in module", func));
+                let actual_func_name = match func.as_str() {
+                    "print_int" => "rython_print_int",
+                    "print_integer" => "rython_print_int",
+                    "print_float" => "rython_print_float",
+                    "print_str" => "rython_print_str",
+                    "rython_print_str" => "rython_print_str",
+                    "add" => "rython_add",
+                    "minus" => "rython_minus",
+                    "multiply" => "rython_multiply",
+                    "divide" => "rython_divide",
+                    "fibonacci" => "rython_fibonacci",
+                    _ => func.as_str(),
+                };
+
+                let function = self.module.get_function(actual_func_name)
+                    .unwrap_or_else(|| panic!("Function '{}' not found in module", actual_func_name));
                 let compiled_args: Vec<inkwell::values::BasicMetadataValueEnum> = args
                     .iter()
                     .map(|arg| self.compile_expr(arg).into())

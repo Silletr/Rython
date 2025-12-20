@@ -1,3 +1,19 @@
-function main() -> int:
-    rython_print_str("Hello World! This is a standalone binary compiled by Rython.")
-    return 0
+# Rython Scripting Mode Demo
+# No 'main' function needed anymore!
+
+x: int = 5
+y: int = 8
+z: int = x + y * 3
+a: str = "Hi from Native Code!"
+
+print_str("--- Rython Script execution ---")
+print_str(a)
+
+print_str("Calculation result (x + y * 3):")
+print_int(z)
+
+print_str("Fibonacci of 15:")
+f: int = fibonacci(15)
+print_int(f)
+
+print_str("--- Execution Finished ---")

@@ -1,7 +1,5 @@
-// Based on rython/parser/ast.py
-
-WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
-COMMENT = _{ "#" ~ (!("\n" | "\r") ~ ANY)* }
+WHITESPACE = _{ " " | "\t" | NEWLINE | ";" }
+COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* }
 
 // Atoms
 number = @{ "-"? ~ ASCII_DIGIT+ }
@@ -12,13 +10,16 @@ identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 type = { "int" | "float" | "str" }
 
 // Expressions
-expression = { term ~ (("+" | "-" | "*" | "/") ~ term)* }
+expression = { term ~ (bin_op ~ term)* }
+bin_op = { "+" | "-" | "*" | "/" }
 term = { "(" ~ expression ~ ")" | call | var_ref | float | number | string }
 
 var_ref = { identifier }
 call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
 
 // Statements
+// IMPORTANT: var_decl MUST come before expression because expression can match an identifier (var_ref)
+// which is a prefix of var_decl.
 statement = { function_def | var_decl | return_statement | expression }
 
 var_decl = { identifier ~ ":" ~ type ~ "=" ~ expression }
@@ -27,8 +28,8 @@ return_statement = { "return" ~ expression }
 
 params = { (param ~ ("," ~ param)*)? }
 
-// A block is a sequence of statements separated by newlines or semicolons
-block = { (statement | NEWLINE | ";")* }
+// A block is just a sequence of statements. WHITESPACE (including NEWLINE) is silent.
+block = { statement* }
 
 function_def = {
     "function" ~ identifier ~
@@ -38,5 +39,5 @@ function_def = {
 }
 param = { identifier ~ ":" ~ type }
 
-// Top-level - permissive about newlines and semicolons
-program = { (statement | NEWLINE | ";")* ~ EOI }
+// Top-level
+program = { SOI ~ statement* ~ EOI }
