@@ -1,0 +1,6 @@
+def main() -> int {
+    a: int = 5;
+    b: int = 7;
+    return a + b;
+};
+main()

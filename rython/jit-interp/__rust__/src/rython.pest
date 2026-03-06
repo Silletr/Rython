@@ -1,0 +1,45 @@
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT = _{ "#" ~ (!("\n" | "\r") ~ ANY)* }
+
+number = @{ "-"? ~ ASCII_DIGIT+ }
+float = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+type = { "int" | "float" | "str" }
+
+op = { "<=" | "<" | "+" | "-" | "*" | "/" }
+expression = { term ~ (op ~ term)* }
+term = { call | var_ref | number | float | string | "(" ~ expression ~ ")" }
+
+var_ref = { identifier }
+call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
+
+// Block: zero or more statements, each optionally followed by a semicolon
+block = { "{" ~ (statement ~ ";"?)* ~ "}" }
+
+while_statement = { "while" ~ expression ~ block }
+
+if_statement = {
+    "if" ~ expression ~ block ~
+    ("else" ~ (if_statement | block))?
+}
+
+assign_statement = { identifier ~ "=" ~ expression }
+
+statement = { function_def | var_decl | return_statement | if_statement | while_statement | assign_statement | expression }
+
+var_decl = { identifier ~ ":" ~ type ~ "=" ~ expression }
+
+return_statement = { "return" ~ expression }
+
+function_def = {
+    "def" ~ identifier ~
+    "(" ~ (param ~ ("," ~ param)*)? ~ ")" ~
+    "->" ~ type ~
+    block
+}
+param = { identifier ~ ":" ~ type }
+
+// Program: zero or more statements, each optionally followed by a semicolon
+program = { SOI ~ (statement ~ ";"?)* ~ EOI }

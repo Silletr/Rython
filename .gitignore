@@ -7,7 +7,8 @@ rython/parser/parser.out
 rython/parser/parsetab.py
 rython/parser/*.out
 rython/parser/parsetab.*
-
+rython/.venv
+rython/jit-interp/__rust__/target
 *.pyc
 *.so
 *.pyd

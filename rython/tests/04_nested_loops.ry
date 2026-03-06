@@ -1,0 +1,14 @@
+def main() -> int {
+    i: int = 0;
+    res: int = 0;
+    while i < 1000 {
+        j: int = 0;
+        while j < 1000 {
+            res = res + 1;
+            j = j + 1;
+        };
+        i = i + 1;
+    };
+    return res;
+};
+main()

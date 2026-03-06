@@ -1,0 +1,10 @@
+def main() -> int {
+    a: int = 42;
+    b: int = 17;
+    if a < b {
+        return b;
+    } else {
+        return a;
+    };
+};
+main()
