@@ -1,25 +1,69 @@
-# Example of code in Rython
+def print_int(value: int) -> int {
+    print(value);
+    return 0;
+};
+def print_float(value: int) -> int {
+    print(value);
+    return 0;
+};
+def print_str(value: str) -> int {
+    print(value);
+    return 0;
+};
+def print_integer(value: int) -> int {
+    print(value);
+    return 0;
+};
+def print_con(fmt: str, a: int) -> int {
+    print(fmt);
+    print(a);
+    return 0;
+};
+def print_con3(fmt: str, a: int, b: int, c: int) -> int {
+    print(fmt);
+    print(a);
+    print(b);
+    print(c);
+    return 0;
+};
+def fibonacci(n: int) -> int {
+    print(n);
+    return 0;
+};
+def divide(a: int, b: int) -> int {
+    print(a / b);
+    return 0;
+};
+def multiply(a: int, b: int) -> int {
+    print(a * b);
+    return 0;
+};
+def add(a: int, b: int) -> int {
+    print(a + b);
+    return 0;
+};
+def minus(a: int, b: int) -> int {
+    print(a - b);
+    return 0;
+};
 
-# Variables test
-x: int = 5
-a: int = 8
-c: int = x + a * 3
-s: int = x - a * 150
-y: float = 0.54 + c
+x: int = 5;
+a: int = 8;
+c: int = x + a * 3;
+s: int = x - a * 150;
+y: int = c + 1;          # was y: float = 0.54 + c; (float temporarily removed)
 
-# Prints test
-print_int(45)
-print_con("Result of x + a * 3 = %1", c)
-print_con("Result of x - a * 150 = %1", s)
-print_con("Result: %1 + %2 = %3", x, a, c)
+print_int(45);
+print_con("Result of x + a * 3 = %1", c);
+print_con("Result of x - a * 150 = %1", s);
+print_con3("Result: %1 + %2 = %3", x, a, c);
 
-print_str("Hello from Rython!")
-print_float(5.4)
-print_integer(90)
+print_str("Hello from Rython!");
+print_float(5);
+print_integer(90);
 
-# Math
-fibonacci(90)
-divide(y, x)
-multiply(c, s)
-add(0, 9)
-minus(50, c)
+fibonacci(90);
+divide(y, x);
+multiply(c, s);
+add(0, 9);
+minus(50, c);

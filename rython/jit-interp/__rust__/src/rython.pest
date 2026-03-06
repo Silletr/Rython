@@ -8,30 +8,36 @@ identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 type = { "int" | "float" | "str" }
 
-op = { "<=" | "<" | "+" | "-" | "*" | "/" }
-expression = { term ~ (op ~ term)* }
-term = { call | var_ref | number | float | string | "(" ~ expression ~ ")" }
+// Precedence levels (lowest first)
+comp = { "<=" | "<" }
+add = { "+" | "-" }
+mul = { "*" | "/" }
+
+primary = { call | var_ref | number | float | string | "(" ~ expr ~ ")" }
+mul_expr = { primary ~ (mul ~ primary)* }
+add_expr = { mul_expr ~ (add ~ mul_expr)* }
+comp_expr = { add_expr ~ (comp ~ add_expr)* }
+expr = { comp_expr }   // top‑level expression alias
 
 var_ref = { identifier }
-call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
+call = { identifier ~ "(" ~ (expr ~ ("," ~ expr)*)? ~ ")" }
 
-// Block: zero or more statements, each optionally followed by a semicolon
 block = { "{" ~ (statement ~ ";"?)* ~ "}" }
 
-while_statement = { "while" ~ expression ~ block }
+while_statement = { "while" ~ expr ~ block }
 
 if_statement = {
-    "if" ~ expression ~ block ~
+    "if" ~ expr ~ block ~
     ("else" ~ (if_statement | block))?
 }
 
-assign_statement = { identifier ~ "=" ~ expression }
+assign_statement = { identifier ~ "=" ~ expr }
 
-statement = { function_def | var_decl | return_statement | if_statement | while_statement | assign_statement | expression }
+statement = { function_def | var_decl | return_statement | if_statement | while_statement | assign_statement | expr }
 
-var_decl = { identifier ~ ":" ~ type ~ "=" ~ expression }
+var_decl = { identifier ~ ":" ~ type ~ "=" ~ expr }
 
-return_statement = { "return" ~ expression }
+return_statement = { "return" ~ expr }
 
 function_def = {
     "def" ~ identifier ~
@@ -41,5 +47,4 @@ function_def = {
 }
 param = { identifier ~ ":" ~ type }
 
-// Program: zero or more statements, each optionally followed by a semicolon
 program = { SOI ~ (statement ~ ";"?)* ~ EOI }

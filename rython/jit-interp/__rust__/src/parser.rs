@@ -30,17 +30,9 @@ impl RythonParser {
 
     fn r#type(node: Node) -> Result<String> { Ok(node.as_str().to_string()) }
 
-    fn op(node: Node) -> Result<Op> {
-        match node.as_str() {
-            "+" => Ok(Op::Add),
-            "-" => Ok(Op::Sub),
-            "*" => Ok(Op::Mul),
-            "/" => Ok(Op::Div),
-            "<" => Ok(Op::Lt),
-            "<=" => Ok(Op::Le),
-            other => panic!("Invalid operator: {}", other),
-        }
-    }
+    fn comp(node: Node) -> Result<String> { Ok(node.as_str().to_string()) }
+    fn add(node: Node) -> Result<String> { Ok(node.as_str().to_string()) }
+    fn mul(node: Node) -> Result<String> { Ok(node.as_str().to_string()) }
 
     fn param(node: Node) -> Result<(String, String)> {
         let mut children = node.into_children();
@@ -59,32 +51,41 @@ impl RythonParser {
         let name = Self::identifier(name_node)?;
         let mut args = Vec::new();
         for child in children {
-            if child.as_rule() == Rule::expression {
-                args.push(Self::expression(child)?);
+            if child.as_rule() == Rule::expr {
+                args.push(Self::expr(child)?);
             }
         }
         Ok(Expr::Call { func: name, args })
     }
 
-    fn term(node: Node) -> Result<Expr> {
+    // Primary: literals, variables, calls, parenthesised expressions
+    fn primary(node: Node) -> Result<Expr> {
         let child = node.into_children().next().unwrap();
         match child.as_rule() {
+            Rule::call => Self::call(child),
+            Rule::var_ref => Self::var_ref(child),
             Rule::number => Ok(Expr::Number(Self::number(child)?)),
             Rule::float => Ok(Expr::Float(Self::float(child)?)),
             Rule::string => Ok(Expr::String(Self::string(child)?)),
-            Rule::call => Self::call(child),
-            Rule::var_ref => Self::var_ref(child),
-            Rule::expression => Self::expression(child),
+            Rule::expr => Self::expr(child), // parentheses
             _ => unreachable!(),
         }
     }
 
-    fn expression(node: Node) -> Result<Expr> {
+    // Multiplication and division
+    fn mul_expr(node: Node) -> Result<Expr> {
         let mut children = node.into_children();
-        let mut res = Self::term(children.next().unwrap())?;
+        let mut res = Self::primary(children.next().unwrap())?;
         while let Some(op_node) = children.next() {
-            let op = Self::op(op_node)?;
-            let right = Self::term(children.next().unwrap())?;
+            let op = match op_node.as_rule() {
+                Rule::mul => match op_node.as_str() {
+                    "*" => Op::Mul,
+                    "/" => Op::Div,
+                    _ => unreachable!(),
+                },
+                _ => unreachable!(),
+            };
+            let right = Self::primary(children.next().unwrap())?;
             res = Expr::BinOp {
                 left: Box::new(res),
                 op,
@@ -92,6 +93,58 @@ impl RythonParser {
             };
         }
         Ok(res)
+    }
+
+    // Addition and subtraction
+    fn add_expr(node: Node) -> Result<Expr> {
+        let mut children = node.into_children();
+        let mut res = Self::mul_expr(children.next().unwrap())?;
+        while let Some(op_node) = children.next() {
+            let op = match op_node.as_rule() {
+                Rule::add => match op_node.as_str() {
+                    "+" => Op::Add,
+                    "-" => Op::Sub,
+                    _ => unreachable!(),
+                },
+                _ => unreachable!(),
+            };
+            let right = Self::mul_expr(children.next().unwrap())?;
+            res = Expr::BinOp {
+                left: Box::new(res),
+                op,
+                right: Box::new(right),
+            };
+        }
+        Ok(res)
+    }
+
+    // Comparison operators (lowest precedence)
+    fn comp_expr(node: Node) -> Result<Expr> {
+        let mut children = node.into_children();
+        let mut res = Self::add_expr(children.next().unwrap())?;
+        while let Some(op_node) = children.next() {
+            let op = match op_node.as_rule() {
+                Rule::comp => match op_node.as_str() {
+                    "<" => Op::Lt,
+                    "<=" => Op::Le,
+                    _ => unreachable!(),
+                },
+                _ => unreachable!(),
+            };
+            let right = Self::add_expr(children.next().unwrap())?;
+            res = Expr::BinOp {
+                left: Box::new(res),
+                op,
+                right: Box::new(right),
+            };
+        }
+        Ok(res)
+    }
+
+    // Top‑level expression – it has a single child (a comp_expr node)
+    fn expr(node: Node) -> Result<Expr> {
+        let child = node.into_children().next().unwrap();
+        Self::comp_expr(child)
     }
 
     fn block(node: Node) -> Result<Vec<Statement>> {
@@ -107,7 +160,7 @@ impl RythonParser {
     fn while_statement(node: Node) -> Result<Statement> {
         let mut children = node.into_children();
         let cond_node = children.next().unwrap();
-        let cond = Self::expression(cond_node)?;
+        let cond = Self::expr(cond_node)?;
         let block_node = children.next().unwrap();
         let body = Self::block(block_node)?;
         Ok(Statement::While(WhileStmt { condition: cond, body }))
@@ -116,7 +169,7 @@ impl RythonParser {
     fn if_statement(node: Node) -> Result<Statement> {
         let mut children = node.into_children();
         let cond_node = children.next().unwrap();
-        let cond = Self::expression(cond_node)?;
+        let cond = Self::expr(cond_node)?;
         let then_block_node = children.next().unwrap();
         let then_block = Self::block(then_block_node)?;
         let else_block = if let Some(else_node) = children.next() {
@@ -136,7 +189,7 @@ impl RythonParser {
         let name_node = children.next().unwrap();
         let val_node = children.next().unwrap();
         let name = Self::identifier(name_node)?;
-        let val = Self::expression(val_node)?;
+        let val = Self::expr(val_node)?;
         Ok(Statement::Assign(name, val))
     }
 
@@ -147,14 +200,14 @@ impl RythonParser {
         let val_node = children.next().unwrap();
         let name = Self::identifier(name_node)?;
         let ty = Self::r#type(type_node)?;
-        let val = Self::expression(val_node)?;
+        let val = Self::expr(val_node)?;
         Ok(Statement::VarDecl(VarDecl { name, type_def: ty, value: val }))
     }
 
     fn return_statement(node: Node) -> Result<Statement> {
         let mut children = node.into_children();
         let expr_node = children.next().unwrap();
-        let expr = Self::expression(expr_node)?;
+        let expr = Self::expr(expr_node)?;
         Ok(Statement::Return(expr))
     }
 
@@ -188,7 +241,7 @@ impl RythonParser {
             Rule::if_statement => Self::if_statement(child),
             Rule::while_statement => Self::while_statement(child),
             Rule::assign_statement => Self::assign_statement(child),
-            Rule::expression => Ok(Statement::Expr(Self::expression(child)?)),
+            Rule::expr => Ok(Statement::Expr(Self::expr(child)?)),
             _ => unreachable!(),
         }
     }
