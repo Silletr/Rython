@@ -154,7 +154,6 @@ impl CraneliftJIT {
 
         let mut i = 0;
         while i < bytecode.len() {
-            // If this index is a block start and we are not already in that block, switch
             if let Some(&block) = block_map.get(&i) {
                 if block != current_block {
                     builder.switch_to_block(block);
@@ -262,7 +261,6 @@ impl CraneliftJIT {
             i += 1;
         }
 
-        // Seal any remaining unsealed blocks (should be none if we sealed all terminators)
         builder.seal_all_blocks();
         builder.finalize();
 
