@@ -4,6 +4,9 @@ use std::rc::Rc;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use rayon::prelude::*;
+use std::path::{Path, PathBuf};
+use std::collections::HashSet;
+use std::fs;
 
 #[path = "interp/arena.rs"] mod arena;
 #[path = "interp/bytecode.rs"] mod bytecode;
@@ -86,6 +89,7 @@ fn convert_statement(stmt: parser::Statement) -> FrontendStmt {
             FrontendStmt::Expr(FrontendExpr::Assign(name, Box::new(convert_expr(expr))))
         }
         parser::Statement::FunctionDef(_) => panic!("Function def not expected here"),
+        parser::Statement::Import(_) => panic!("Import should have been resolved earlier"),
     }
 }
 
@@ -95,45 +99,75 @@ fn convert_function_def(f: parser::FunctionDef) -> FrontendFunc {
     FrontendFunc { name: f.name, params, body }
 }
 
-fn compile_to_native_impl(code: &str) -> Result<String, String> {
-    let cached = { COMPILATION_CACHE.lock().unwrap().get(code).cloned() };
+// helper: recursively collect functions from a file and its imports
+fn collect_functions_from_file(
+    filename: &str,
+    already_loaded: &mut HashSet<String>,
+) -> Result<Vec<FrontendFunc>, String> {
+    let canonical = Path::new(filename)
+        .canonicalize()
+        .map_err(|e| format!("Cannot canonicalize {}: {}", filename, e))?;
+    let canonical_str = canonical.to_string_lossy().to_string();
+    if already_loaded.contains(&canonical_str) {
+        return Ok(Vec::new());
+    }
+    already_loaded.insert(canonical_str);
 
-    let (functions, string_pool) = if let Some((cached_functions, cached_string_pool)) = cached {
-        if cfg!(debug_assertions) { println!("Using cached compilation for code"); }
-        let functions = cached_functions
-            .into_iter()
-            .map(|(bytecode, params, regs)| (Rc::new(bytecode), params, regs))
-            .collect();
-        (functions, cached_string_pool)
-    } else {
-        if cfg!(debug_assertions) { println!("Compiling code for the first time"); }
-        let program = parser::parse_rython_code(code).map_err(|e| format!("Syntax error: {}", e))?;
+    let code = fs::read_to_string(filename)
+        .map_err(|e| format!("Cannot read {}: {}", filename, e))?;
+    let program = parser::parse_rython_code(&code)
+        .map_err(|e| format!("Parse error in {}: {}", filename, e))?;
 
-        let mut funcs = Vec::new();
-        let mut main_stmts = Vec::new();
-        for stmt in program.body {
-            match stmt {
-                parser::Statement::FunctionDef(f) => funcs.push(convert_function_def(f)),
-                other => main_stmts.push(convert_statement(other)),
+    let dir = Path::new(filename).parent().unwrap_or(Path::new(".")).to_path_buf();
+    let mut functions = Vec::new();
+    let mut imports = Vec::new();
+
+    for stmt in program.body {
+        match stmt {
+            parser::Statement::FunctionDef(f) => {
+                functions.push(convert_function_def(f));
             }
+            parser::Statement::Import(import_path) => {
+                let full_path = dir.join(&import_path);
+                imports.push(full_path.to_string_lossy().to_string());
+            }
+            _ => {} // ignore top‑level expressions in imported files
         }
+    }
 
-        let mut codegen = CodeGen::new();
-        let ir_program = codegen.generate(funcs, main_stmts);
+    for import_path in imports {
+        let imported_funcs = collect_functions_from_file(&import_path, already_loaded)?;
+        functions.extend(imported_funcs);
+    }
 
-        let mut lower_ctx = LoweringContext::new();
-        let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
+    Ok(functions)
+}
 
-        let functions_raw = functions
-            .iter()
-            .map(|(rc, params, regs)| (rc.as_ref().clone(), *params, *regs))
-            .collect();
-        let to_cache = (functions_raw, string_pool.clone());
-        COMPILATION_CACHE.lock().unwrap().insert(code.to_string(), to_cache);
+pub fn compile_file(filename: &str) -> Result<String, String> {
+    let mut already_loaded = HashSet::new();
+    let mut functions = collect_functions_from_file(filename, &mut already_loaded)?;
 
-        (functions, string_pool)
-    };
+    // read the main file again to get its top-level statements (ignoring imports and functions)
+    let code = fs::read_to_string(filename)
+        .map_err(|e| format!("Cannot read {}: {}", filename, e))?;
+    let program = parser::parse_rython_code(&code)
+        .map_err(|e| format!("Parse error in {}: {}", filename, e))?;
 
+    let mut main_statements = Vec::new();
+    for stmt in program.body {
+        match stmt {
+            parser::Statement::FunctionDef(_) | parser::Statement::Import(_) => {}
+            other => main_statements.push(convert_statement(other)),
+        }
+    }
+
+    // generate IR and lower
+    let mut codegen = CodeGen::new();
+    let ir_program = codegen.generate(functions, main_statements);
+    let mut lower_ctx = LoweringContext::new();
+    let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
+
+    // run VM
     let threshold = unsafe { JIT_THRESHOLD };
     let mut vm = VM::new(functions, string_pool, 1024 * 1024, threshold);
     match vm.run() {
@@ -145,14 +179,68 @@ fn compile_to_native_impl(code: &str) -> Result<String, String> {
 #[pyfunction]
 fn compile_to_native(py: Python, code: &str) -> PyResult<String> {
     py.allow_threads(|| {
-        compile_to_native_impl(code).map_err(|e| pyo3::exceptions::PyValueError::new_err(e))
+        // for string input, still use the old method 
+        let program = parser::parse_rython_code(code)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Parse error: {}", e)))?;
+        let mut funcs = Vec::new();
+        let mut main_stmts = Vec::new();
+        for stmt in program.body {
+            match stmt {
+                parser::Statement::FunctionDef(f) => funcs.push(convert_function_def(f)),
+                parser::Statement::Import(_) => {
+                    return Err(pyo3::exceptions::PyValueError::new_err(
+                        "import not supported in compile_to_native; use compile_file instead".to_string()
+                    ));
+                }
+                other => main_stmts.push(convert_statement(other)),
+            }
+        }
+        let mut codegen = CodeGen::new();
+        let ir_program = codegen.generate(funcs, main_stmts);
+        let mut lower_ctx = LoweringContext::new();
+        let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
+        let threshold = unsafe { JIT_THRESHOLD };
+        let mut vm = VM::new(functions, string_pool, 1024 * 1024, threshold);
+        match vm.run() {
+            Ok(val) => Ok(format!("{:?}", val)),
+            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(e)),
+        }
+    })
+}
+
+#[pyfunction]
+fn compile_file_py(py: Python, filename: &str) -> PyResult<String> {
+    py.allow_threads(|| {
+        compile_file(filename).map_err(|e| pyo3::exceptions::PyValueError::new_err(e))
     })
 }
 
 #[pyfunction]
 fn compile_many(py: Python, codes: Vec<String>) -> PyResult<Vec<String>> {
     let results: Vec<Result<String, String>> = py.allow_threads(|| {
-        codes.into_par_iter().map(|code| compile_to_native_impl(&code)).collect()
+        codes.into_par_iter().map(|code| {
+            // for many, assume no imports 
+            let program = parser::parse_rython_code(&code)
+                .map_err(|e| format!("Parse error: {}", e))?;
+            let mut funcs = Vec::new();
+            let mut main_stmts = Vec::new();
+            for stmt in program.body {
+                match stmt {
+                    parser::Statement::FunctionDef(f) => funcs.push(convert_function_def(f)),
+                    parser::Statement::Import(_) => {
+                        return Err("import not supported in compile_many".to_string());
+                    }
+                    other => main_stmts.push(convert_statement(other)),
+                }
+            }
+            let mut codegen = CodeGen::new();
+            let ir_program = codegen.generate(funcs, main_stmts);
+            let mut lower_ctx = LoweringContext::new();
+            let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
+            let threshold = unsafe { JIT_THRESHOLD };
+            let mut vm = VM::new(functions, string_pool, 1024 * 1024, threshold);
+            vm.run().map(|val| format!("{:?}", val))
+        }).collect()
     });
     results.into_iter().collect::<Result<Vec<String>, String>>()
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e))
@@ -166,6 +254,7 @@ fn set_jit_threshold(threshold: usize) {
 #[pymodule]
 fn rython(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compile_to_native, m)?)?;
+    m.add_function(wrap_pyfunction!(compile_file_py, m)?)?;
     m.add_function(wrap_pyfunction!(compile_many, m)?)?;
     m.add_function(wrap_pyfunction!(set_jit_threshold, m)?)?;
     Ok(())

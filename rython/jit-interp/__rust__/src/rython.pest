@@ -1,50 +1,70 @@
-WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
-COMMENT = _{ "#" ~ (!("\n" | "\r") ~ ANY)* }
+program = { SOI ~ (statement)* ~ EOI }
 
-number = @{ "-"? ~ ASCII_DIGIT+ }
-float = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
-string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
-identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
-
-type = { "int" | "float" | "str" }
-
-// Precedence levels (lowest first)
-comp = { "<=" | "<" }
-add = { "+" | "-" }
-mul = { "*" | "/" }
-
-primary = { call | var_ref | number | float | string | "(" ~ expr ~ ")" }
-mul_expr = { primary ~ (mul ~ primary)* }
-add_expr = { mul_expr ~ (add ~ mul_expr)* }
-comp_expr = { add_expr ~ (comp ~ add_expr)* }
-expr = { comp_expr }   // top‑level expression alias
-
-var_ref = { identifier }
-call = { identifier ~ "(" ~ (expr ~ ("," ~ expr)*)? ~ ")" }
-
-block = { "{" ~ (statement ~ ";"?)* ~ "}" }
-
-while_statement = { "while" ~ expr ~ block }
-
-if_statement = {
-    "if" ~ expr ~ block ~
-    ("else" ~ (if_statement | block))?
-}
-
-assign_statement = { identifier ~ "=" ~ expr }
-
-statement = { function_def | var_decl | return_statement | if_statement | while_statement | assign_statement | expr }
-
-var_decl = { identifier ~ ":" ~ type ~ "=" ~ expr }
-
-return_statement = { "return" ~ expr }
+import_statement = { "import" ~ string ~ ";"? }
 
 function_def = {
-    "def" ~ identifier ~
-    "(" ~ (param ~ ("," ~ param)*)? ~ ")" ~
-    "->" ~ type ~
-    block
+    "def" ~ identifier ~ "(" ~ (param ~ ("," ~ param)*)? ~ ")" ~ "->" ~ type ~ block ~ ";"?
 }
+
+var_decl = { identifier ~ ":" ~ type ~ "=" ~ expr ~ ";" }
+
+return_statement = { "return" ~ expr ~ ";" }
+
+if_statement = {
+    "if" ~ expr ~ block ~ ("else" ~ (if_statement | block))? ~ ";"?
+}
+
+while_statement = { "while" ~ expr ~ block ~ ";"? }
+
+assign_statement = { identifier ~ "=" ~ expr ~ ";" }
+
+block = { "{" ~ (statement)* ~ "}" }
+
+statement = {
+    import_statement |
+    function_def |
+    var_decl |
+    return_statement |
+    if_statement |
+    while_statement |
+    assign_statement |
+    expr ~ ";"?
+}
+
+expr = { comp_expr }
+
+comp_expr = { add_expr ~ (comp ~ add_expr)* }
+add_expr  = { mul_expr ~ (add ~ mul_expr)* }
+mul_expr  = { primary ~ (mul ~ primary)* }
+
+primary = {
+    call |
+    var_ref |
+    number |
+    float |
+    string |
+    "(" ~ expr ~ ")"
+}
+
+call = { identifier ~ "(" ~ (expr ~ ("," ~ expr)*)? ~ ")" }
+
+var_ref = { identifier }
+
 param = { identifier ~ ":" ~ type }
 
-program = { SOI ~ (statement ~ ";"?)* ~ EOI }
+type = { "int" | "float" | "string" | "bool" | "nil" }
+
+identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+number = @{ ASCII_DIGIT+ }
+
+float = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+string = @{ "\"" ~ ( !"\"" ~ ANY )* ~ "\"" }
+
+comp = { "<" | "<=" }
+add  = { "+" | "-" }
+mul  = { "*" | "/" }
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT    = _{ "//" ~ (!"\n" ~ ANY)* ~ ("\n" | EOI) }

@@ -58,7 +58,6 @@ impl RythonParser {
         Ok(Expr::Call { func: name, args })
     }
 
-    // Primary: literals, variables, calls, parenthesised expressions
     fn primary(node: Node) -> Result<Expr> {
         let child = node.into_children().next().unwrap();
         match child.as_rule() {
@@ -67,12 +66,11 @@ impl RythonParser {
             Rule::number => Ok(Expr::Number(Self::number(child)?)),
             Rule::float => Ok(Expr::Float(Self::float(child)?)),
             Rule::string => Ok(Expr::String(Self::string(child)?)),
-            Rule::expr => Self::expr(child), // parentheses
+            Rule::expr => Self::expr(child),
             _ => unreachable!(),
         }
     }
 
-    // Multiplication and division
     fn mul_expr(node: Node) -> Result<Expr> {
         let mut children = node.into_children();
         let mut res = Self::primary(children.next().unwrap())?;
@@ -95,7 +93,6 @@ impl RythonParser {
         Ok(res)
     }
 
-    // Addition and subtraction
     fn add_expr(node: Node) -> Result<Expr> {
         let mut children = node.into_children();
         let mut res = Self::mul_expr(children.next().unwrap())?;
@@ -118,7 +115,6 @@ impl RythonParser {
         Ok(res)
     }
 
-    // Comparison operators (lowest precedence)
     fn comp_expr(node: Node) -> Result<Expr> {
         let mut children = node.into_children();
         let mut res = Self::add_expr(children.next().unwrap())?;
@@ -141,7 +137,6 @@ impl RythonParser {
         Ok(res)
     }
 
-    // Top‑level expression – it has a single child (a comp_expr node)
     fn expr(node: Node) -> Result<Expr> {
         let child = node.into_children().next().unwrap();
         Self::comp_expr(child)
@@ -232,9 +227,17 @@ impl RythonParser {
         Ok(Statement::FunctionDef(FunctionDef { name, args, return_type, body }))
     }
 
+    fn import_statement(node: Node) -> Result<Statement> {
+        let mut children = node.into_children();
+        let string_node = children.next().unwrap();
+        let filename = Self::string(string_node)?;
+        Ok(Statement::Import(filename))
+    }
+
     fn statement(node: Node) -> Result<Statement> {
         let child = node.into_children().next().unwrap();
         match child.as_rule() {
+            Rule::import_statement => Self::import_statement(child),
             Rule::var_decl => Self::var_decl(child),
             Rule::function_def => Self::function_def(child),
             Rule::return_statement => Self::return_statement(child),
@@ -311,6 +314,7 @@ pub enum Statement {
     If(IfStmt),
     Assign(String, Expr),
     Expr(Expr),
+    Import(String), // NEW
 }
 
 #[derive(Debug, Clone)]
