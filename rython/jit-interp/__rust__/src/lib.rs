@@ -16,14 +16,13 @@ use std::fs;
 #[path = "interp/value.rs"] mod value;
 #[path = "interp/vm.rs"] mod vm;
 
-mod jit;
 mod parser;
 
 use frontend::{CodeGen, Func as FrontendFunc, Stmt as FrontendStmt, Expr as FrontendExpr, BinOp as FrontendBinOp};
 use lower::LoweringContext;
 use vm::VM;
 
-static mut JIT_THRESHOLD: usize = 3;
+static mut JIT_THRESHOLD: usize = 1000000; // Not used, kept for compatibility
 
 static COMPILATION_CACHE: Lazy<Mutex<HashMap<String, (Vec<(Vec<bytecode::Instruction>, usize, usize)>, Vec<String>)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
@@ -99,7 +98,6 @@ fn convert_function_def(f: parser::FunctionDef) -> FrontendFunc {
     FrontendFunc { name: f.name, params, body }
 }
 
-// helper: recursively collect functions from a file and its imports
 fn collect_functions_from_file(
     filename: &str,
     already_loaded: &mut HashSet<String>,
@@ -131,7 +129,7 @@ fn collect_functions_from_file(
                 let full_path = dir.join(&import_path);
                 imports.push(full_path.to_string_lossy().to_string());
             }
-            _ => {} // ignore top‑level expressions in imported files
+            _ => {}
         }
     }
 
@@ -145,9 +143,8 @@ fn collect_functions_from_file(
 
 pub fn compile_file(filename: &str) -> Result<String, String> {
     let mut already_loaded = HashSet::new();
-    let mut functions = collect_functions_from_file(filename, &mut already_loaded)?;
+    let functions = collect_functions_from_file(filename, &mut already_loaded)?;
 
-    // read the main file again to get its top-level statements (ignoring imports and functions)
     let code = fs::read_to_string(filename)
         .map_err(|e| format!("Cannot read {}: {}", filename, e))?;
     let program = parser::parse_rython_code(&code)
@@ -161,15 +158,13 @@ pub fn compile_file(filename: &str) -> Result<String, String> {
         }
     }
 
-    // generate IR and lower
     let mut codegen = CodeGen::new();
     let ir_program = codegen.generate(functions, main_statements);
     let mut lower_ctx = LoweringContext::new();
     let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
 
-    // run VM
-    let threshold = unsafe { JIT_THRESHOLD };
-    let mut vm = VM::new(functions, string_pool, 1024 * 1024, threshold);
+    // Use zero‑allocation interpreter with max call depth 1024
+    let mut vm = VM::new(functions, string_pool, 1024 * 1024, unsafe { JIT_THRESHOLD }, 1024);
     match vm.run() {
         Ok(val) => Ok(format!("{:?}", val)),
         Err(e) => Err(e),
@@ -179,7 +174,6 @@ pub fn compile_file(filename: &str) -> Result<String, String> {
 #[pyfunction]
 fn compile_to_native(py: Python, code: &str) -> PyResult<String> {
     py.allow_threads(|| {
-        // for string input, still use the old method 
         let program = parser::parse_rython_code(code)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Parse error: {}", e)))?;
         let mut funcs = Vec::new();
@@ -189,7 +183,7 @@ fn compile_to_native(py: Python, code: &str) -> PyResult<String> {
                 parser::Statement::FunctionDef(f) => funcs.push(convert_function_def(f)),
                 parser::Statement::Import(_) => {
                     return Err(pyo3::exceptions::PyValueError::new_err(
-                        "import not supported in compile_to_native; use compile_file instead".to_string()
+                        "import not supported in compile_to_native; use compile_file_py instead".to_string()
                     ));
                 }
                 other => main_stmts.push(convert_statement(other)),
@@ -199,8 +193,7 @@ fn compile_to_native(py: Python, code: &str) -> PyResult<String> {
         let ir_program = codegen.generate(funcs, main_stmts);
         let mut lower_ctx = LoweringContext::new();
         let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
-        let threshold = unsafe { JIT_THRESHOLD };
-        let mut vm = VM::new(functions, string_pool, 1024 * 1024, threshold);
+        let mut vm = VM::new(functions, string_pool, 1024 * 1024, unsafe { JIT_THRESHOLD }, 1024);
         match vm.run() {
             Ok(val) => Ok(format!("{:?}", val)),
             Err(e) => Err(pyo3::exceptions::PyValueError::new_err(e)),
@@ -219,7 +212,6 @@ fn compile_file_py(py: Python, filename: &str) -> PyResult<String> {
 fn compile_many(py: Python, codes: Vec<String>) -> PyResult<Vec<String>> {
     let results: Vec<Result<String, String>> = py.allow_threads(|| {
         codes.into_par_iter().map(|code| {
-            // for many, assume no imports 
             let program = parser::parse_rython_code(&code)
                 .map_err(|e| format!("Parse error: {}", e))?;
             let mut funcs = Vec::new();
@@ -237,8 +229,7 @@ fn compile_many(py: Python, codes: Vec<String>) -> PyResult<Vec<String>> {
             let ir_program = codegen.generate(funcs, main_stmts);
             let mut lower_ctx = LoweringContext::new();
             let (functions, string_pool) = lower_ctx.lower_program(&ir_program);
-            let threshold = unsafe { JIT_THRESHOLD };
-            let mut vm = VM::new(functions, string_pool, 1024 * 1024, threshold);
+            let mut vm = VM::new(functions, string_pool, 1024 * 1024, unsafe { JIT_THRESHOLD }, 1024);
             vm.run().map(|val| format!("{:?}", val))
         }).collect()
     });
@@ -251,11 +242,20 @@ fn set_jit_threshold(threshold: usize) {
     unsafe { JIT_THRESHOLD = threshold; }
 }
 
+#[pyfunction]
+fn set_thread_count(n: usize) {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(n)
+        .build_global()
+        .unwrap();
+}
+
 #[pymodule]
 fn rython(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compile_to_native, m)?)?;
     m.add_function(wrap_pyfunction!(compile_file_py, m)?)?;
     m.add_function(wrap_pyfunction!(compile_many, m)?)?;
     m.add_function(wrap_pyfunction!(set_jit_threshold, m)?)?;
+    m.add_function(wrap_pyfunction!(set_thread_count, m)?)?;
     Ok(())
 }

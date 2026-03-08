@@ -10,12 +10,10 @@ def heavy(n: int) -> int {
 def main() -> int {
     i: int = 0;
     res: int = 0;
-    while i < 200 {
-        res = heavy(1000);
+    while i < 20000 {
+        res = heavy(5000);
         i = i + 1;
     };
     return res;
 };
 return main();
-
-// this is the test which causes the switch block bug in the JIT

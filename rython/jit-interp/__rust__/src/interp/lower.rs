@@ -134,16 +134,16 @@ impl LoweringContext {
                         self.bytecode.push(Instruction::encode_imm(OpCode::Print, rval, 0));
                     }
                     IrNode::Call(dst, func_idx, args) => {
-    for (i, arg_reg) in args.iter().enumerate() {
-        let src = self.ensure_reg(*arg_reg);
-        self.bytecode.push(Instruction::encode_rr(OpCode::Move, i as u8, src));
-    }
-    self.bytecode.push(Instruction::encode_imm(OpCode::Call, 0, *func_idx as u16));
-    let rd = self.ensure_reg(*dst);
-    if rd != 0 {
-        self.bytecode.push(Instruction::encode_rr(OpCode::Move, rd, 0));
-    }
-}
+                        for (i, arg_reg) in args.iter().enumerate() {
+                            let src = self.ensure_reg(*arg_reg);
+                            self.bytecode.push(Instruction::encode_rr(OpCode::Move, i as u8, src));
+                        }
+                        self.bytecode.push(Instruction::encode_imm(OpCode::Call, 0, *func_idx as u16));
+                        let rd = self.ensure_reg(*dst);
+                        if rd != 0 {
+                            self.bytecode.push(Instruction::encode_rr(OpCode::Move, rd, 0));
+                        }
+                    }
                     IrNode::Move(dst, src) => {
                         let rd = self.ensure_reg(*dst);
                         let rs = self.ensure_reg(*src);
@@ -166,16 +166,34 @@ impl LoweringContext {
             self.bytecode[*pos] = new_insn;
         }
 
-        (self.bytecode.clone(), self.next_reg as usize)
+        // Apply peephole optimizations
+        let optimized = self.bytecode.clone(); 
+
+        if cfg!(debug_assertions) && func.name == "main" {  // assuming func has a name field
+        println!("Bytecode for main:");
+        for (i, insn) in optimized.iter().enumerate() {
+            println!("  {}: {:?} dst={} src1={} src2={} imm={}", 
+                i, insn.opcode(), insn.dst(), insn.src1(), insn.src2(), insn.imm());
+        }
+    }
+
+        (optimized, self.next_reg as usize)
     }
 
     pub fn lower_program(&mut self, program: &IrProgram) -> (Vec<(Rc<Vec<Instruction>>, usize, usize)>, Vec<String>) {
-        let mut functions = Vec::new();
-        for func in &program.functions {
-            let (bytecode, max_reg) = self.lower_function(func);
-            let param_count = func.params.len();
-            functions.push((Rc::new(bytecode), param_count, max_reg));
+    let mut functions = Vec::new();
+    for (idx, func) in program.functions.iter().enumerate() {
+        let (bytecode, max_reg) = self.lower_function(func);
+        let param_count = func.params.len();
+        if idx == 0 {  // main function
+            println!("Bytecode for main (function {}):", idx);
+            for (i, insn) in bytecode.iter().enumerate() {
+                println!("  {}: {:?} dst={} src1={} src2={} imm={}",
+                    i, insn.opcode(), insn.dst(), insn.src1(), insn.src2(), insn.imm());
+            }
         }
-        (functions, self.string_pool.clone())
+        functions.push((Rc::new(bytecode), param_count, max_reg));
+    }
+    (functions, self.string_pool.clone())
     }
 }
